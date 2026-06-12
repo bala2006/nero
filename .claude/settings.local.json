@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew assembleRelease)",
+      "Bash(./gradlew assembleRelease -PtargetAbi=arm64-v8a)",
+      "Bash(flutter analyze:*)",
+      "Bash(dir \"C:\\\\Users\\\\balac\\\\Desktop\\\\Developing Apps\\\\nero\\\\lib\\\\features\")",
+      "Bash(dart analyze:*)"
+    ]
+  }
+}
