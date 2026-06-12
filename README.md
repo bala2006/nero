@@ -6,6 +6,20 @@
 Nero is an advanced, production-grade Flutter application implementing a localized **Agentic AI Chat System**. Built with a pluggable provider architecture, Nero can connect to any LLM API (currently includes **Sarvam AI** support out of the box). It allows LLM models to plan tasks, invoke local tools, read files, generate spreadsheets, docx files, PDFs, package zip files, query web content, and monitor executing tasks with a high-fidelity audit trail.
 
 ---
+## Roadmap
+
+### v0.2
+- Additional model providers
+- Enhanced agent planning
+
+### v0.3
+- Plugin marketplace
+- Multi-agent workflows
+
+### v0.4
+- Team workspaces
+- Remote execution support
+---
 
 ## ✨ Features
 
@@ -63,7 +77,7 @@ Make sure you have the Flutter and Dart SDKs installed on your system:
 
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-username/nero.git
+   git clone https://github.com/bala2006/nero.git
    cd nero
    ```
 
