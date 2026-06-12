@@ -1,5 +1,5 @@
 name: nero
-description: "Nero - An advanced Agentic AI Chat System powered by Sarvam AI with local tool execution, document generation, and offline persistence."
+description: "Nero - An advanced Agentic AI Chat System with pluggable AI provider support, local tool execution, document generation, and offline persistence."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -18,10 +18,10 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # of the product and file versions while build-number is used as the build suffix.
 version: 1.0.0+1
 
-publish_to: https://github.com/nero-ai/nero
-homepage: https://github.com/nero-ai/nero
-repository: https://github.com/nero-ai/nero
-issue_tracker: https://github.com/nero-ai/nero/issues
+publish_to: https://github.com/bala2006/nero
+homepage: https://github.com/bala2006/nero
+repository: https://github.com/bala2006/nero
+issue_tracker: https://github.com/bala2006/nero/issues
 
 author: Nero Contributors <opensource@nero.ai>
 
