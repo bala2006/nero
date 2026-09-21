@@ -526,6 +526,70 @@ class CapabilityRegistry {
     tags: <String>['output', 'zip', 'package', 'archive'],
   );
 
+  /// Runs a snippet on-device inside the sandbox WebView.
+  ///
+  /// Kept next to the other built-ins rather than behind a provider so the
+  /// tool is always available; whether the *runtime* can serve it is decided by
+  /// the sandbox executor (registered only when the shell owns a sandbox).
+  static const CapabilityDefinition sandboxRunCode = CapabilityDefinition(
+    key: 'sandbox.run_code',
+    version: 1,
+    displayName: 'Run code on-device',
+    description:
+        'Execute a JavaScript snippet or render an HTML page locally on the '
+        'user\'s device, inside the sandboxed WebView, and read back the '
+        'result and console output. Use it for deterministic computation, '
+        'quick data transforms, or verifying code you are about to suggest. '
+        'The sandbox has no network, storage, clipboard or file access unless '
+        'the user grants it, so never rely on those from a snippet.',
+    kind: CapabilityKind.tool,
+    category: CapabilityCategory.effect,
+    sideEffectPolicy: CapabilitySideEffectPolicy.localStateWrite,
+    singleUse: false,
+    reliabilityClass: CapabilityReliabilityClass.high,
+    modelExposure: CapabilityModelExposure.visible,
+    toolDescriptor: CapabilityToolDescriptor(
+      name: 'sandbox_run_code',
+      description:
+          'Run code on the user\'s device and return its output. Provide the '
+          'complete snippet in `source`; it runs to completion (or until the '
+          'time limit) and everything it logged or returned comes back to you. '
+          'Prefer `language: "javascript"` for computation; use '
+          '`language: "html"` only when the user explicitly wants a rendered '
+          'page.',
+      parameters: <String, Object?>{
+        'type': 'object',
+        'properties': <String, Object?>{
+          'source': <String, Object?>{
+            'type': 'string',
+            'description':
+                'The complete code to run. JavaScript is executed and its '
+                'return value is reported; HTML is rendered as a page.',
+            'minLength': 1,
+          },
+          'language': <String, Object?>{
+            'type': 'string',
+            'description': 'javascript (default) or html.',
+            'enum': <String>['javascript', 'html'],
+          },
+          'reason': <String, Object?>{
+            'type': 'string',
+            'description':
+                'One short line saying why you are running this snippet. It is '
+                'recorded in the user\'s audit log.',
+          },
+        },
+        'required': <String>['source'],
+        'additionalProperties': false,
+      },
+      examples: <String>[
+        'Compute the median of these numbers before answering',
+        'Validate that this regex behaves correctly on the sample input',
+      ],
+    ),
+    tags: <String>['sandbox', 'code', 'local'],
+  );
+
   static const List<CapabilityDefinition> all = <CapabilityDefinition>[
     searchWeb,
     readUrl,
@@ -537,6 +601,7 @@ class CapabilityRegistry {
     editTextFile,
     writeProjectFiles,
     packageZip,
+    sandboxRunCode,
   ];
 
   static CapabilityDefinition? byKey(String key) {

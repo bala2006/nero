@@ -1,0 +1,10 @@
+# Configuration for `flutter test` / `dart test`.
+# See https://github.com/dart-lang/test/blob/master/pkgs/test/doc/configuration.md
+#
+# Streaming/agent suites drive several asynchronous round-trips, so give each
+# test a comfortable ceiling without masking genuinely hung tests.
+timeout: 60s
+
+# Run test files in parallel. Raise this on machines with more cores
+# (`flutter test -j 16`) to shorten local runs.
+concurrency: 8

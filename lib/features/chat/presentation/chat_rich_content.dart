@@ -10,7 +10,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
 import '../../workspace/application/diagram_artifact_store.dart';
-import 'ai_thinking_animation.dart';
+import '../../../core/widgets/thinking_animation.dart';
 import 'webview_mermaid.dart';
 
 class ChatRichContent extends StatelessWidget {
@@ -35,7 +35,7 @@ class ChatRichContent extends StatelessWidget {
     if (data.trim() == 'Thinking...') {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
-        child: AIThinkingAnimation(),
+        child: ThinkingAnimation(),
       );
     }
     final segments = _MarkdownSegmentParser.parse(data);

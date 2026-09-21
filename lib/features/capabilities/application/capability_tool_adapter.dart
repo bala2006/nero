@@ -1,5 +1,6 @@
 import '../../chat/application/sarvam_api_client.dart';
 import '../domain/capability_registry.dart';
+import 'capability_catalog.dart';
 
 class CapabilityToolAdapter {
   const CapabilityToolAdapter._();
@@ -22,9 +23,13 @@ class CapabilityToolAdapter {
     );
   }
 
-  static List<SarvamToolDefinition> modelVisibleToolDefinitions() {
+  static List<SarvamToolDefinition> modelVisibleToolDefinitions({
+    CapabilityCatalog? catalog,
+  }) {
+    final effective = catalog ?? CapabilityCatalog.instance;
     return List<SarvamToolDefinition>.unmodifiable(
-      CapabilityRegistry.visibleToModel()
+      effective
+          .visibleToModel()
           .where((capability) => capability.toolDescriptor != null)
           .map(toSarvamToolDefinition),
     );

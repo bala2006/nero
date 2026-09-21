@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../domain/chat_message.dart';
 import 'sarvam_api_client.dart';
 import '../../capabilities/capabilities.dart';
+import '../../capabilities/application/capability_catalog.dart';
 import '../../runtime/application/request_classifier.dart';
 import '../../runtime/domain/request_classification.dart';
 
@@ -53,20 +54,37 @@ class ToolSelector {
     required ChatCompletionClient client,
     Duration timeout = const Duration(milliseconds: 1500),
     RequestClassifier requestClassifier = const RequestClassifier(),
+    CapabilityCatalog? capabilityCatalog,
   }) : _client = client,
        _timeout = timeout,
-       _requestClassifier = requestClassifier;
+       _requestClassifier = requestClassifier,
+       _catalog = capabilityCatalog ?? CapabilityCatalog.instance;
 
   final ChatCompletionClient _client;
   final Duration _timeout;
   final RequestClassifier _requestClassifier;
+
+  /// Source of the model's tool list. Read through [_refreshCatalog] so tools
+  /// added at runtime (MCP, sandbox) are selectable on the next turn.
+  final CapabilityCatalog _catalog;
   final Map<String, _ToolSelectionCacheEntry> _cache =
       <String, _ToolSelectionCacheEntry>{};
 
-  static final Set<String> _modelToolNames = CapabilityRegistry.modelToolNames()
-      .toSet();
-  static final List<Map<String, Object?>> _modelToolPayloads =
-      CapabilityRegistry.modelToolPayloads();
+  int _catalogRevision = -1;
+  Set<String> _modelToolNames = const <String>{};
+  List<Map<String, Object?>> _modelToolPayloads = const <Map<String, Object?>>[];
+
+  /// Rebuilds the cached tool list when the catalog changed and drops the
+  /// selector cache, since a now-available tool could change a past decision.
+  void _refreshCatalog() {
+    if (_catalog.revision == _catalogRevision) {
+      return;
+    }
+    _catalogRevision = _catalog.revision;
+    _modelToolNames = _catalog.modelToolNames().toSet();
+    _modelToolPayloads = _catalog.modelToolPayloads();
+    _cache.clear();
+  }
 
   Future<List<String>> selectTools({
     required String apiKey,
@@ -86,6 +104,7 @@ class ToolSelector {
     required String prompt,
     required List<ChatMessage> recentMessages,
   }) async {
+    _refreshCatalog();
     final cacheKey = _cacheKey(prompt: prompt, recentMessages: recentMessages);
     final cached = _cache[cacheKey];
     final now = DateTime.now();

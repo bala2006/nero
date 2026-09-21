@@ -9,6 +9,8 @@ import 'streaming_assistant_round_recovery.dart';
 /// Callback types used by [StreamingAssistantRoundExecutor].
 typedef ReasoningDeltaHandler = void Function(String delta);
 typedef ContentRevealedHandler = void Function(String content);
+typedef ReasoningPartBoundaryHandler = void Function();
+typedef ReasoningTokensHandler = void Function(int? reasoningTokens);
 
 /// Encapsulates the streaming or non-streaming execution of one assistant
 /// "round" (a single model call that may produce content, tool-calls, or
@@ -60,6 +62,8 @@ class StreamingAssistantRoundExecutor {
     required ContentRevealedHandler onContentRevealed,
     required ReasoningDeltaHandler onReasoningDelta,
     required void Function(StreamSubscription<AgentStreamEvent>) onSubscriptionCreated,
+    ReasoningPartBoundaryHandler? onReasoningPartBoundary,
+    ReasoningTokensHandler? onReasoningTokens,
   }) async {
     final streamingClient = _streamingClient;
     if (streamingClient == null) {
@@ -84,6 +88,8 @@ class StreamingAssistantRoundExecutor {
       onContentRevealed: onContentRevealed,
       onReasoningDelta: onReasoningDelta,
       onSubscriptionCreated: onSubscriptionCreated,
+      onReasoningPartBoundary: onReasoningPartBoundary,
+      onReasoningTokens: onReasoningTokens,
     );
   }
 
@@ -131,6 +137,8 @@ class StreamingAssistantRoundExecutor {
     required ContentRevealedHandler onContentRevealed,
     required ReasoningDeltaHandler onReasoningDelta,
     required void Function(StreamSubscription<AgentStreamEvent>) onSubscriptionCreated,
+    ReasoningPartBoundaryHandler? onReasoningPartBoundary,
+    ReasoningTokensHandler? onReasoningTokens,
   }) async {
     final completer = Completer<SarvamChatResult>();
     final contentBuffer = StringBuffer();
@@ -186,6 +194,10 @@ class StreamingAssistantRoundExecutor {
                 // incrementally for merging.
                 reasoningBuffer.write(event.delta);
                 onReasoningDelta(event.delta);
+              case ReasoningPartBoundaryEvent():
+                onReasoningPartBoundary?.call();
+              case ReasoningTokensEvent():
+                onReasoningTokens?.call(event.reasoningTokens);
               case ToolCallFinalEvent():
                 if (!sawToolCall && stagedContentBuffer.isNotEmpty) {
                   onContentRevealed(responseBuffer.toString());

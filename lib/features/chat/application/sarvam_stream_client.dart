@@ -22,6 +22,22 @@ class ThinkingDeltaEvent extends AgentStreamEvent {
   final String delta;
 }
 
+/// Emitted when the provider starts a new reasoning summary part.
+///
+/// The Responses API sends `response.reasoning_summary_part.added` before each
+/// summary block, which gives the UI natural segment boundaries so it can show
+/// per-part durations instead of one undifferentiated wall of reasoning text.
+class ReasoningPartBoundaryEvent extends AgentStreamEvent {
+  const ReasoningPartBoundaryEvent();
+}
+
+/// Emitted when the provider reports usage for reasoning tokens.
+class ReasoningTokensEvent extends AgentStreamEvent {
+  const ReasoningTokensEvent(this.reasoningTokens);
+
+  final int? reasoningTokens;
+}
+
 class ToolCallFinalEvent extends AgentStreamEvent {
   const ToolCallFinalEvent(this.call);
 

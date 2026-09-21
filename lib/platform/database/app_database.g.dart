@@ -863,12 +863,12 @@ class $AppSettingsEntriesTable extends AppSettingsEntries
     type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _sarvamApiKeyMeta = const VerificationMeta(
-    'sarvamApiKey',
+  static const VerificationMeta _azureApiKeyMeta = const VerificationMeta(
+    'azureApiKey',
   );
   @override
-  late final GeneratedColumn<String> sarvamApiKey = GeneratedColumn<String>(
-    'sarvam_api_key',
+  late final GeneratedColumn<String> azureApiKey = GeneratedColumn<String>(
+    'azure_api_key',
     aliasedName,
     false,
     type: DriftSqlType.string,
@@ -886,7 +886,7 @@ class $AppSettingsEntriesTable extends AppSettingsEntries
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [id, sarvamApiKey, selectedModelId];
+  List<GeneratedColumn> get $columns => [id, azureApiKey, selectedModelId];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -902,16 +902,16 @@ class $AppSettingsEntriesTable extends AppSettingsEntries
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
-    if (data.containsKey('sarvam_api_key')) {
+    if (data.containsKey('azure_api_key')) {
       context.handle(
-        _sarvamApiKeyMeta,
-        sarvamApiKey.isAcceptableOrUnknown(
-          data['sarvam_api_key']!,
-          _sarvamApiKeyMeta,
+        _azureApiKeyMeta,
+        azureApiKey.isAcceptableOrUnknown(
+          data['azure_api_key']!,
+          _azureApiKeyMeta,
         ),
       );
     } else if (isInserting) {
-      context.missing(_sarvamApiKeyMeta);
+      context.missing(_azureApiKeyMeta);
     }
     if (data.containsKey('selected_model_id')) {
       context.handle(
@@ -937,9 +937,9 @@ class $AppSettingsEntriesTable extends AppSettingsEntries
         DriftSqlType.int,
         data['${effectivePrefix}id'],
       )!,
-      sarvamApiKey: attachedDatabase.typeMapping.read(
+      azureApiKey: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}sarvam_api_key'],
+        data['${effectivePrefix}azure_api_key'],
       )!,
       selectedModelId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -957,18 +957,21 @@ class $AppSettingsEntriesTable extends AppSettingsEntries
 class AppSettingsEntry extends DataClass
     implements Insertable<AppSettingsEntry> {
   final int id;
-  final String sarvamApiKey;
+
+  /// Azure AI key. Renamed from `sarvamApiKey` in schema v9; the v9 migration
+  /// copies the old column's value across so no credential is lost.
+  final String azureApiKey;
   final String selectedModelId;
   const AppSettingsEntry({
     required this.id,
-    required this.sarvamApiKey,
+    required this.azureApiKey,
     required this.selectedModelId,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
-    map['sarvam_api_key'] = Variable<String>(sarvamApiKey);
+    map['azure_api_key'] = Variable<String>(azureApiKey);
     map['selected_model_id'] = Variable<String>(selectedModelId);
     return map;
   }
@@ -976,7 +979,7 @@ class AppSettingsEntry extends DataClass
   AppSettingsEntriesCompanion toCompanion(bool nullToAbsent) {
     return AppSettingsEntriesCompanion(
       id: Value(id),
-      sarvamApiKey: Value(sarvamApiKey),
+      azureApiKey: Value(azureApiKey),
       selectedModelId: Value(selectedModelId),
     );
   }
@@ -988,7 +991,7 @@ class AppSettingsEntry extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AppSettingsEntry(
       id: serializer.fromJson<int>(json['id']),
-      sarvamApiKey: serializer.fromJson<String>(json['sarvamApiKey']),
+      azureApiKey: serializer.fromJson<String>(json['azureApiKey']),
       selectedModelId: serializer.fromJson<String>(json['selectedModelId']),
     );
   }
@@ -997,26 +1000,26 @@ class AppSettingsEntry extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
-      'sarvamApiKey': serializer.toJson<String>(sarvamApiKey),
+      'azureApiKey': serializer.toJson<String>(azureApiKey),
       'selectedModelId': serializer.toJson<String>(selectedModelId),
     };
   }
 
   AppSettingsEntry copyWith({
     int? id,
-    String? sarvamApiKey,
+    String? azureApiKey,
     String? selectedModelId,
   }) => AppSettingsEntry(
     id: id ?? this.id,
-    sarvamApiKey: sarvamApiKey ?? this.sarvamApiKey,
+    azureApiKey: azureApiKey ?? this.azureApiKey,
     selectedModelId: selectedModelId ?? this.selectedModelId,
   );
   AppSettingsEntry copyWithCompanion(AppSettingsEntriesCompanion data) {
     return AppSettingsEntry(
       id: data.id.present ? data.id.value : this.id,
-      sarvamApiKey: data.sarvamApiKey.present
-          ? data.sarvamApiKey.value
-          : this.sarvamApiKey,
+      azureApiKey: data.azureApiKey.present
+          ? data.azureApiKey.value
+          : this.azureApiKey,
       selectedModelId: data.selectedModelId.present
           ? data.selectedModelId.value
           : this.selectedModelId,
@@ -1027,58 +1030,58 @@ class AppSettingsEntry extends DataClass
   String toString() {
     return (StringBuffer('AppSettingsEntry(')
           ..write('id: $id, ')
-          ..write('sarvamApiKey: $sarvamApiKey, ')
+          ..write('azureApiKey: $azureApiKey, ')
           ..write('selectedModelId: $selectedModelId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, sarvamApiKey, selectedModelId);
+  int get hashCode => Object.hash(id, azureApiKey, selectedModelId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is AppSettingsEntry &&
           other.id == this.id &&
-          other.sarvamApiKey == this.sarvamApiKey &&
+          other.azureApiKey == this.azureApiKey &&
           other.selectedModelId == this.selectedModelId);
 }
 
 class AppSettingsEntriesCompanion extends UpdateCompanion<AppSettingsEntry> {
   final Value<int> id;
-  final Value<String> sarvamApiKey;
+  final Value<String> azureApiKey;
   final Value<String> selectedModelId;
   const AppSettingsEntriesCompanion({
     this.id = const Value.absent(),
-    this.sarvamApiKey = const Value.absent(),
+    this.azureApiKey = const Value.absent(),
     this.selectedModelId = const Value.absent(),
   });
   AppSettingsEntriesCompanion.insert({
     this.id = const Value.absent(),
-    required String sarvamApiKey,
+    required String azureApiKey,
     required String selectedModelId,
-  }) : sarvamApiKey = Value(sarvamApiKey),
+  }) : azureApiKey = Value(azureApiKey),
        selectedModelId = Value(selectedModelId);
   static Insertable<AppSettingsEntry> custom({
     Expression<int>? id,
-    Expression<String>? sarvamApiKey,
+    Expression<String>? azureApiKey,
     Expression<String>? selectedModelId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (sarvamApiKey != null) 'sarvam_api_key': sarvamApiKey,
+      if (azureApiKey != null) 'azure_api_key': azureApiKey,
       if (selectedModelId != null) 'selected_model_id': selectedModelId,
     });
   }
 
   AppSettingsEntriesCompanion copyWith({
     Value<int>? id,
-    Value<String>? sarvamApiKey,
+    Value<String>? azureApiKey,
     Value<String>? selectedModelId,
   }) {
     return AppSettingsEntriesCompanion(
       id: id ?? this.id,
-      sarvamApiKey: sarvamApiKey ?? this.sarvamApiKey,
+      azureApiKey: azureApiKey ?? this.azureApiKey,
       selectedModelId: selectedModelId ?? this.selectedModelId,
     );
   }
@@ -1089,8 +1092,8 @@ class AppSettingsEntriesCompanion extends UpdateCompanion<AppSettingsEntry> {
     if (id.present) {
       map['id'] = Variable<int>(id.value);
     }
-    if (sarvamApiKey.present) {
-      map['sarvam_api_key'] = Variable<String>(sarvamApiKey.value);
+    if (azureApiKey.present) {
+      map['azure_api_key'] = Variable<String>(azureApiKey.value);
     }
     if (selectedModelId.present) {
       map['selected_model_id'] = Variable<String>(selectedModelId.value);
@@ -1102,7 +1105,7 @@ class AppSettingsEntriesCompanion extends UpdateCompanion<AppSettingsEntry> {
   String toString() {
     return (StringBuffer('AppSettingsEntriesCompanion(')
           ..write('id: $id, ')
-          ..write('sarvamApiKey: $sarvamApiKey, ')
+          ..write('azureApiKey: $azureApiKey, ')
           ..write('selectedModelId: $selectedModelId')
           ..write(')'))
         .toString();
@@ -8206,13 +8209,13 @@ typedef $$AgentTaskEntriesTableProcessedTableManager =
 typedef $$AppSettingsEntriesTableCreateCompanionBuilder =
     AppSettingsEntriesCompanion Function({
       Value<int> id,
-      required String sarvamApiKey,
+      required String azureApiKey,
       required String selectedModelId,
     });
 typedef $$AppSettingsEntriesTableUpdateCompanionBuilder =
     AppSettingsEntriesCompanion Function({
       Value<int> id,
-      Value<String> sarvamApiKey,
+      Value<String> azureApiKey,
       Value<String> selectedModelId,
     });
 
@@ -8230,8 +8233,8 @@ class $$AppSettingsEntriesTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get sarvamApiKey => $composableBuilder(
-    column: $table.sarvamApiKey,
+  ColumnFilters<String> get azureApiKey => $composableBuilder(
+    column: $table.azureApiKey,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -8255,8 +8258,8 @@ class $$AppSettingsEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get sarvamApiKey => $composableBuilder(
-    column: $table.sarvamApiKey,
+  ColumnOrderings<String> get azureApiKey => $composableBuilder(
+    column: $table.azureApiKey,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -8278,8 +8281,8 @@ class $$AppSettingsEntriesTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get sarvamApiKey => $composableBuilder(
-    column: $table.sarvamApiKey,
+  GeneratedColumn<String> get azureApiKey => $composableBuilder(
+    column: $table.azureApiKey,
     builder: (column) => column,
   );
 
@@ -8330,21 +8333,21 @@ class $$AppSettingsEntriesTableTableManager
           updateCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                Value<String> sarvamApiKey = const Value.absent(),
+                Value<String> azureApiKey = const Value.absent(),
                 Value<String> selectedModelId = const Value.absent(),
               }) => AppSettingsEntriesCompanion(
                 id: id,
-                sarvamApiKey: sarvamApiKey,
+                azureApiKey: azureApiKey,
                 selectedModelId: selectedModelId,
               ),
           createCompanionCallback:
               ({
                 Value<int> id = const Value.absent(),
-                required String sarvamApiKey,
+                required String azureApiKey,
                 required String selectedModelId,
               }) => AppSettingsEntriesCompanion.insert(
                 id: id,
-                sarvamApiKey: sarvamApiKey,
+                azureApiKey: azureApiKey,
                 selectedModelId: selectedModelId,
               ),
           withReferenceMapper: (p0) => p0

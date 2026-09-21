@@ -8,6 +8,7 @@ import '../domain/chat_message.dart';
 import 'document_artifact_tool_executor.dart';
 import 'native_output_tool_bridge.dart';
 import 'sarvam_api_client.dart';
+import 'tool_executor_registry.dart';
 import 'web_tools.dart';
 
 typedef ToolExecutionThoughtCallback = void Function(String thought);
@@ -24,15 +25,21 @@ class ToolExecutionCoordinator {
     required AuditLogStore auditLogStore,
     required DocumentArtifactToolExecutor documentArtifactToolExecutor,
     required NativeOutputToolBridge nativeOutputToolBridge,
+    ToolExecutorRegistry? externalExecutorRegistry,
   }) : _webToolService = webToolService,
        _auditLogStore = auditLogStore,
        _documentArtifactToolExecutor = documentArtifactToolExecutor,
-       _nativeOutputToolBridge = nativeOutputToolBridge;
+       _nativeOutputToolBridge = nativeOutputToolBridge,
+       _externalExecutorRegistry = externalExecutorRegistry;
 
   final WebToolService _webToolService;
   final AuditLogStore _auditLogStore;
   final DocumentArtifactToolExecutor _documentArtifactToolExecutor;
   final NativeOutputToolBridge _nativeOutputToolBridge;
+
+  /// Consulted first so MCP and sandbox tools (which are not in the built-in
+  /// switch below) can be executed without changing this class again.
+  final ToolExecutorRegistry? _externalExecutorRegistry;
 
   Future<ToolExecutionResult> execute(
     SarvamToolCall toolCall, {
@@ -45,6 +52,21 @@ class ToolExecutionCoordinator {
     required ToolExecutionArtifactCallback onArtifact,
     ToolExecutionFailureCallback? onDocxFailure,
   }) async {
+    final external = _externalExecutorRegistry?.resolve(toolCall.name);
+    if (external != null) {
+      return external.execute(
+        toolCall,
+        ToolExecutionContext(
+          conversationId: conversationId(),
+          activeRequestPrompt: activeRequestPrompt(),
+          latestUserPrompt: latestUserPrompt(),
+          assistantMessageId: activeAssistantId(),
+          onThought: onThought,
+          onActivity: onActivity,
+          onArtifact: onArtifact,
+        ),
+      );
+    }
     switch (toolCall.name) {
       case 'search_web':
         return _executeSearchWeb(

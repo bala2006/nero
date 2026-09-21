@@ -13,10 +13,6 @@ android {
         targetCompatibility = JavaVersion.VERSION_11
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
-    }
-
     defaultConfig {
         applicationId = "com.example.nero"
         minSdk = 24
@@ -49,4 +45,12 @@ android {
 
 flutter {
     source = "../.."
+}
+
+// Kotlin 2.2 deprecated the `android.kotlinOptions` string form; configure the
+// target through the Kotlin Gradle plugin's typed compilerOptions DSL instead.
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11)
+    }
 }

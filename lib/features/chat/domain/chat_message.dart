@@ -1,3 +1,5 @@
+import 'reasoning_state.dart';
+
 enum ChatRole { user, assistant, system }
 
 ChatRole _chatRoleFromJson(String? value) {
@@ -220,6 +222,7 @@ class ChatMessage {
     this.thinkingSteps = const <String>[],
     this.thinkingDurationMs,
     this.thinkingStartedAtEpochMs,
+    this.reasoning,
     this.activities = const <ChatActivity>[],
     this.attachments = const <ChatAttachment>[],
     this.generatedArtifacts = const <GeneratedArtifactReference>[],
@@ -232,9 +235,16 @@ class ChatMessage {
   final bool isStreaming;
   final double? tokensPerSecond;
   final double? averageTokensPerSecond;
+  /// Superseded by [reasoning]; retained so history written by older builds
+  /// still loads. New messages no longer populate this.
   final List<String> thinkingSteps;
+
   final int? thinkingDurationMs;
   final int? thinkingStartedAtEpochMs;
+
+  /// The model's reasoning (extended thinking) for this message.
+  final ReasoningState? reasoning;
+
   final List<ChatActivity> activities;
   final List<ChatAttachment> attachments;
   final List<GeneratedArtifactReference> generatedArtifacts;
@@ -250,6 +260,7 @@ class ChatMessage {
     'thinkingSteps': thinkingSteps,
     'thinkingDurationMs': thinkingDurationMs,
     'thinkingStartedAtEpochMs': thinkingStartedAtEpochMs,
+    'reasoning': reasoning?.toJson(),
     'activities': activities
         .map((item) => item.toJson())
         .toList(growable: false),
@@ -266,6 +277,21 @@ class ChatMessage {
     final rawActivities = json['activities'];
     final rawAttachments = json['attachments'];
     final rawGeneratedArtifacts = json['generatedArtifacts'];
+    final rawReasoning = json['reasoning'];
+    final thinkingDurationMs = (json['thinkingDurationMs'] as num?)?.toInt();
+    final thinkingSteps = rawThinkingSteps is List
+        ? rawThinkingSteps.map((item) => item.toString()).toList(
+            growable: false,
+          )
+        : const <String>[];
+    final ReasoningState? reasoning = rawReasoning is Map
+        ? ReasoningState.fromJson(Map<String, dynamic>.from(rawReasoning))
+        : (thinkingSteps.isEmpty
+              ? null
+              : ReasoningState.fromLegacyThinkingSteps(
+                  thinkingSteps,
+                  durationMs: thinkingDurationMs,
+                ));
     return ChatMessage(
       id: json['id']?.toString() ?? '',
       role: _chatRoleFromJson(json['role']?.toString()),
@@ -275,14 +301,11 @@ class ChatMessage {
       tokensPerSecond: (json['tokensPerSecond'] as num?)?.toDouble(),
       averageTokensPerSecond: (json['averageTokensPerSecond'] as num?)
           ?.toDouble(),
-      thinkingSteps: rawThinkingSteps is List
-          ? rawThinkingSteps
-                .map((item) => item.toString())
-                .toList(growable: false)
-          : const <String>[],
-      thinkingDurationMs: (json['thinkingDurationMs'] as num?)?.toInt(),
+      thinkingSteps: thinkingSteps,
+      thinkingDurationMs: thinkingDurationMs,
       thinkingStartedAtEpochMs: (json['thinkingStartedAtEpochMs'] as num?)
           ?.toInt(),
+      reasoning: reasoning,
       activities: rawActivities is List
           ? rawActivities
                 .whereType<Map>()
@@ -325,6 +348,7 @@ class ChatMessage {
     List<String>? thinkingSteps,
     int? thinkingDurationMs,
     int? thinkingStartedAtEpochMs,
+    ReasoningState? reasoning,
     List<ChatActivity>? activities,
     List<ChatAttachment>? attachments,
     List<GeneratedArtifactReference>? generatedArtifacts,
@@ -332,6 +356,7 @@ class ChatMessage {
     bool clearAverageTokensPerSecond = false,
     bool clearThinkingDurationMs = false,
     bool clearThinkingStartedAtEpochMs = false,
+    bool clearReasoning = false,
   }) {
     return ChatMessage(
       id: id ?? this.id,
@@ -352,6 +377,7 @@ class ChatMessage {
       thinkingStartedAtEpochMs: clearThinkingStartedAtEpochMs
           ? null
           : thinkingStartedAtEpochMs ?? this.thinkingStartedAtEpochMs,
+      reasoning: clearReasoning ? null : reasoning ?? this.reasoning,
       activities: activities ?? this.activities,
       attachments: attachments ?? this.attachments,
       generatedArtifacts: generatedArtifacts ?? this.generatedArtifacts,

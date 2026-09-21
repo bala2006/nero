@@ -11,6 +11,7 @@ import '../../response/response.dart';
 import '../../settings/app_settings.dart';
 import '../../skills/skills.dart';
 import '../../verifier/verifier.dart';
+import '../domain/agent_policy.dart';
 import '../domain/run_route.dart';
 import '../domain/request_classification.dart';
 import '../domain/runtime_operation_ledger_record.dart';
@@ -150,6 +151,7 @@ class RunCoordinator {
     executeToolCall,
     required AutoContinueDecider shouldAutoContinue,
     bool reuseExistingArtifacts = false,
+    RunBudget budget = RunBudget.unlimited,
     RunCoordinatorHooks hooks = const RunCoordinatorHooks(),
   }) async {
     final requestClassification = _requestClassifier.classify(prompt);
@@ -462,6 +464,7 @@ class RunCoordinator {
 
     try {
       final result = await _orchestrator.run(
+        budget: budget,
         apiKey: apiKey,
         settings: settings,
         prompt: prompt,

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import '../../runtime/domain/agent_policy.dart';
 import '../../settings/app_settings.dart';
 import '../domain/chat_message.dart';
 import 'context_engine.dart';
@@ -52,6 +53,7 @@ class AgentOrchestratorResult {
     required this.contextAssembly,
     this.toolSelectionDecision,
     this.artifactProduced = false,
+    this.stopReason,
   });
 
   final SarvamChatResult finalRound;
@@ -61,6 +63,14 @@ class AgentOrchestratorResult {
   final ContextEngineResult contextAssembly;
   final ToolSelectionDecision? toolSelectionDecision;
   final bool artifactProduced;
+
+  /// Set when the run was cut short by its [RunBudget] rather than finishing.
+  ///
+  /// The partial answer is still returned, so the user sees everything the
+  /// agent managed to produce before the limit hit.
+  final String? stopReason;
+
+  bool get budgetExhausted => stopReason != null;
 }
 
 class AgentOrchestratorHooks {
@@ -117,6 +127,7 @@ class AgentOrchestrator {
     required Future<ToolExecutionResult> Function(SarvamToolCall toolCall)
     executeToolCall,
     required AutoContinueDecider shouldAutoContinue,
+    RunBudget budget = RunBudget.unlimited,
     AgentOrchestratorHooks hooks = const AgentOrchestratorHooks(),
   }) async {
     final recentMessages = modelHistory.reversed.take(2).toList(growable: false);
@@ -168,13 +179,46 @@ class AgentOrchestrator {
     final toolBatchCounts = <String, int>{};
     var hadToolResults = false;
     var artifactProduced = false;
+    var iterations = 0;
+    var toolCallCount = 0;
+    SarvamChatResult? lastCompletedRound;
+    final runStartedAt = DateTime.now();
 
     while (true) {
+      iterations += 1;
+      // Check the budget before spending another model call. A budget can only
+      // be exhausted once at least one round has completed, so `finalRound` is
+      // always available on this path.
+      final previousRound = lastCompletedRound;
+      if (previousRound != null) {
+        final budgetStopReason = _budgetStopReason(
+          iterations: iterations,
+          toolCalls: toolCallCount,
+          elapsedMs: DateTime.now().difference(runStartedAt).inMilliseconds,
+          budget: budget,
+        );
+        if (budgetStopReason != null) {
+          final partial = responseBuffer.toString().trim().isNotEmpty
+              ? responseBuffer.toString()
+              : previousRound.content;
+          return AgentOrchestratorResult(
+            finalRound: previousRound,
+            validatedResponse: _responseGuard.validate(partial),
+            requestMessages: List<ChatMessage>.unmodifiable(requestMessages),
+            selectedTools: selectedTools,
+            contextAssembly: contextAssembly,
+            toolSelectionDecision: toolSelectionDecision,
+            artifactProduced: artifactProduced,
+            stopReason: budgetStopReason,
+          );
+        }
+      }
       final result = await executeAssistantRound(
         requestMessages: requestMessages,
         tools: activeToolDefinitions,
         responseBuffer: responseBuffer,
       );
+      lastCompletedRound = result;
       if (result.reasoningContent != null && result.reasoningContent!.isNotEmpty) {
         await Future<void>.value(hooks.onThought?.call(result.reasoningContent!));
       }
@@ -221,6 +265,7 @@ class AgentOrchestrator {
             ),
           );
         }
+        toolCallCount += executableToolCalls.length;
         final dispatchResults = await _toolDispatcher.dispatch(
           executableToolCalls,
           executor: executeToolCall,
@@ -352,6 +397,28 @@ class AgentOrchestrator {
         toolSelectionDecision: toolSelectionDecision,
       );
     }
+  }
+
+  /// Returns a human-readable reason when [budget] is spent, else null.
+  String? _budgetStopReason({
+    required int iterations,
+    required int toolCalls,
+    required int elapsedMs,
+    required RunBudget budget,
+  }) {
+    if (iterations > budget.maxIterations) {
+      return 'Stopped after ${budget.maxIterations} model rounds because the run '
+          'budget was reached. Raise it in Settings › Agent to keep going.';
+    }
+    if (toolCalls > budget.maxToolCalls) {
+      return 'Stopped after ${budget.maxToolCalls} tool calls because the run '
+          'budget was reached. Raise it in Settings › Agent to keep going.';
+    }
+    if (elapsedMs > budget.maxWallClockMs) {
+      return 'Stopped after ${budget.maxWallClockMs ~/ 1000}s because the run '
+          'time limit was reached. Raise it in Settings › Agent to keep going.';
+    }
+    return null;
   }
 
   List<SarvamToolDefinition> _toolDefinitionsFor(

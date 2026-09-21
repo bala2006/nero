@@ -7,8 +7,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 
 import '../../../app/app_error_reporter.dart';
+import '../../../app/navigation.dart';
+import '../../../app/run_replay_bus.dart';
+import '../../../core/format/formatters.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_text_styles.dart';
+import '../../../core/widgets/widgets.dart';
 import '../../agent/domain/agent_task.dart';
 import '../../runtime/domain/runtime_progress_snapshot.dart';
 import '../../runtime/domain/runtime_run.dart';
@@ -18,14 +22,23 @@ import '../../audit/domain/app_capability.dart';
 import '../../audit/domain/audit_log_entry.dart';
 import '../application/chat_history_controller.dart';
 import '../../settings/presentation/nero_settings_screen.dart';
-import '../../settings/sarvam_model_catalog.dart';
+import '../../settings/reasoning_settings.dart';
+import '../../settings/nero_model_catalog.dart';
 import '../../settings/settings_controller.dart';
-import '../../providers/application/provider_chat_bridge.dart';
-import '../../providers/application/sarvam_provider_adapter.dart';
+import '../../providers/azure_ai_config.dart';
+import '../application/azure_responses_client.dart';
 import '../application/chat_session_controller.dart';
 import '../domain/chat_conversation.dart';
 import '../domain/chat_message.dart';
 import 'chat_rich_content.dart';
+import 'reasoning/reasoning_block.dart';
+import 'widgets/shell/chat_sidebar.dart';
+import 'reasoning/thinking_strip.dart';
+import 'widgets/agent_mode_selector.dart';
+import 'widgets/approval_card.dart';
+import 'widgets/composer/attachment_descriptors.dart';
+import 'widgets/composer/composer.dart';
+import 'widgets/composer/composer_attachment_entry.dart';
 import '../../workspace/application/file_ingestion_service.dart';
 import '../../workspace/application/workspace_store.dart';
 import '../../workspace/application/attachment_context_extractor.dart';
@@ -33,9 +46,48 @@ import '../../workspace/application/document_export_service.dart';
 import '../../workspace/presentation/workspace_browser_screen.dart';
 import '../../workspace/domain/workspace_item.dart';
 import '../../../platform/device/native_bridge_service.dart';
+import '../../mcp/application/mcp_registry.dart';
+import '../../mcp/application/mcp_tool_executor.dart';
+import '../../mcp/domain/mcp_server_config.dart';
+import '../../mcp/domain/mcp_tool_descriptor.dart';
+import '../../sandbox/application/sandbox_controller.dart';
+import '../../sandbox/application/sandbox_tool_executor.dart';
 
 class NeroChatScreen extends StatefulWidget {
-  const NeroChatScreen({super.key});
+  const NeroChatScreen({
+    super.key,
+    this.destinations = const <NeroDestination>[],
+    this.onOpenDestination,
+    this.settingsController,
+    this.historyController,
+    this.workspaceStore,
+    this.auditLogStore,
+    this.nativeBridgeService,
+    this.mcpRegistry,
+    this.sandboxController,
+  });
+
+  /// Extra navigation entries rendered in the sidebar's Tools section.
+  final List<NeroDestination> destinations;
+
+  /// Invoked when a sidebar destination is tapped. The host shell owns routing.
+  final Future<void> Function(NeroDestination destination)? onOpenDestination;
+
+  /// App-lifetime services supplied by the shell. When null the screen builds
+  /// and owns its own instances, which keeps the screen usable standalone in
+  /// tests and previews.
+  final SettingsController? settingsController;
+  final ChatHistoryController? historyController;
+  final WorkspaceStore? workspaceStore;
+  final AuditLogStore? auditLogStore;
+  final NativeBridgeService? nativeBridgeService;
+
+  /// When supplied, every enabled MCP tool becomes callable by the model.
+  final McpRegistry? mcpRegistry;
+
+  /// When supplied, `sandbox_run_code` executes snippets on-device even while
+  /// no sandbox screen is open (the shell hosts the WebView).
+  final SandboxController? sandboxController;
 
   @override
   State<NeroChatScreen> createState() => _NeroChatScreenState();
@@ -46,6 +98,7 @@ class _NeroChatScreenState extends State<NeroChatScreen>
   static const int _maxAttachmentsPerPrompt = 5;
 
   late final ChatSessionController _controller;
+  late final AzureResponsesClient _azureClient;
   late final ChatHistoryController _historyController;
   late final SettingsController _settingsController;
   late final WorkspaceStore _workspaceStore;
@@ -55,7 +108,7 @@ class _NeroChatScreenState extends State<NeroChatScreen>
   late final FileIngestionService _fileIngestionService;
   final AttachmentContextExtractor _attachmentContextExtractor =
       const AttachmentContextExtractor();
-  final SarvamModelCatalog _modelCatalog = const SarvamModelCatalog();
+  final NeroModelCatalog _modelCatalog = const NeroModelCatalog();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final TextEditingController _inputController = TextEditingController();
   final FocusNode _inputFocusNode = FocusNode();
@@ -63,27 +116,45 @@ class _NeroChatScreenState extends State<NeroChatScreen>
   int _lastMessageCount = 0;
   String? _activeConversationId;
   Timer? _persistDebounce;
+  bool _ownsSettingsController = false;
+  bool _ownsHistoryController = false;
   bool _lastGeneratingState = false;
   bool _isImportingFiles = false;
+  McpToolExecutor? _mcpToolExecutor;
+  SandboxToolExecutor? _sandboxToolExecutor;
   Set<String> _exportingMessageIds = const <String>{};
-  List<_ComposerAttachmentEntry> _pendingAttachments =
-      const <_ComposerAttachmentEntry>[];
+  int _consumedReplayId = -1;
+  InlineBanner? _replayedPromptBanner;
+  List<ComposerAttachmentEntry> _pendingAttachments =
+      const <ComposerAttachmentEntry>[];
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    final provider = SarvamProviderAdapter();
+    _ownsSettingsController = widget.settingsController == null;
+    _ownsHistoryController = widget.historyController == null;
+    _settingsController = widget.settingsController ?? SettingsController();
+    // Always subscribe: the shared controller from the shell is also observed
+    // by other screens, and this screen still needs to react to model changes.
+    _settingsController.addListener(_handleSettingsChanged);
+    // Azure AI is the only provider. The endpoint and key come from
+    // AzureAiConfig; the URL is read live so a settings refresh applies without
+    // restarting the chat session.
+    final azureClient = AzureResponsesClient(
+      baseUrlProvider: () => _settingsController.state.azureBaseUrl,
+      reasoningEffort: AzureAiConfig.reasoningEffort,
+      maxOutputTokens: AzureAiConfig.maxOutputTokens,
+    );
+    _azureClient = azureClient;
     _controller = ChatSessionController(
-      client: ProviderBackedChatCompletionClient(provider: provider),
-      streamingClient: ProviderBackedStreamingClient(provider: provider),
-    )..addListener(_handleControllerChanged);
-    _historyController = ChatHistoryController();
-    _settingsController = SettingsController()
-      ..addListener(_handleSettingsChanged);
-    _workspaceStore = WorkspaceStore();
-    _auditLogStore = AuditLogStore();
-    _nativeBridgeService = NativeBridgeService();
+      client: azureClient,
+      streamingClient: azureClient,
+    )..addListener(_handleControllerChanged);    _historyController = widget.historyController ?? ChatHistoryController();
+    _workspaceStore = widget.workspaceStore ?? WorkspaceStore();
+    _auditLogStore = widget.auditLogStore ?? AuditLogStore();
+    _nativeBridgeService =
+        widget.nativeBridgeService ?? NativeBridgeService();
     _fileIngestionService = FileIngestionService(
       nativeBridgeService: _nativeBridgeService,
     );
@@ -92,19 +163,65 @@ class _NeroChatScreenState extends State<NeroChatScreen>
       auditLogStore: _auditLogStore,
       nativeBridgeService: _nativeBridgeService,
     );
+    final mcpRegistry = widget.mcpRegistry;
+    if (mcpRegistry != null) {
+      final executor = McpToolExecutor(
+        registry: mcpRegistry,
+        auditLogStore: _auditLogStore,
+      );
+      _mcpToolExecutor = executor;
+      // `mcp__*` names are not in the built-in tool switch, so the executor is
+      // registered into the dispatch chain the coordinator consults first.
+      _controller.registerToolExecutor(executor);
+      // Per-tool approval choices beat the global policy, and a server marked
+      // auto-approve only skips the prompt for tools that did not override it.
+      _controller.externalApprovalOverrideResolver = (toolName) {
+        final tool = mcpRegistry.toolByQualifiedName(toolName);
+        if (tool == null) {
+          return null;
+        }
+        return switch (tool.approvalMode) {
+          McpToolApprovalMode.alwaysAsk => true,
+          McpToolApprovalMode.never => false,
+          McpToolApprovalMode.inherit =>
+            mcpRegistry.serverById(tool.serverId)?.autoApprove == true
+                ? false
+                : null,
+        };
+      };
+    }
+    final sandboxController = widget.sandboxController;
+    if (sandboxController != null) {
+      _sandboxToolExecutor = SandboxToolExecutor(
+        controller: sandboxController,
+        auditLogStore: _auditLogStore,
+      );
+      _controller.registerToolExecutor(_sandboxToolExecutor!);
+    }
     unawaited(_bootstrap());
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    final executor = _mcpToolExecutor;
+    if (executor != null) {
+      _controller.unregisterToolExecutor(executor);
+    }
+    final sandboxExecutor = _sandboxToolExecutor;
+    if (sandboxExecutor != null) {
+      _controller.unregisterToolExecutor(sandboxExecutor);
+    }
     _controller
       ..removeListener(_handleControllerChanged)
       ..dispose();
-    _historyController.dispose();
-    _settingsController
-      ..removeListener(_handleSettingsChanged)
-      ..dispose();
+    if (_ownsHistoryController) {
+      _historyController.dispose();
+    }
+    _settingsController.removeListener(_handleSettingsChanged);
+    if (_ownsSettingsController) {
+      _settingsController.dispose();
+    }
     _persistDebounce?.cancel();
     _inputController.dispose();
     _inputFocusNode.dispose();
@@ -117,6 +234,33 @@ class _NeroChatScreenState extends State<NeroChatScreen>
     if (state == AppLifecycleState.resumed) {
       unawaited(_consumeSharedContent());
     }
+  }
+
+  /// Picks up a prompt handed back by the Runs screen's "Run again" and puts
+  /// it in the composer with a one-shot banner. Keyed by emission id so a
+  /// rebuild never re-fills (or clobbers) the text the user has edited since.
+  void _consumeReplayedPrompt() {
+    final pending = RunReplayBus.instance.pending;
+    if (pending == null || pending.id == _consumedReplayId) {
+      return;
+    }
+    _consumedReplayId = pending.id;
+    _inputController.text = pending.prompt;
+    _inputController.selection = TextSelection.collapsed(
+      offset: pending.prompt.length,
+    );
+    _inputFocusNode.requestFocus();
+    _replayedPromptBanner = InlineBanner(
+      message:
+          'Loaded a previous prompt from Runs. Edit it or send it as-is.',
+      tone: InlineBannerTone.info,
+      icon: Icons.replay_rounded,
+      actionLabel: 'Dismiss',
+      onAction: () {
+        setState(() => _replayedPromptBanner = null);
+      },
+    );
+    setState(() {});
   }
 
   void _handleControllerChanged() {
@@ -142,6 +286,15 @@ class _NeroChatScreenState extends State<NeroChatScreen>
   void _handleSettingsChanged() {
     final settings = _settingsController.state;
     final model = _modelCatalog.byId(settings.selectedModelId);
+    // Reasoning effort and summary verbosity are read straight from settings so
+    // a change in the settings screen applies to the very next request.
+    final advanced = _settingsController.advanced;
+    final reasoning = advanced.reasoning;
+    _azureClient
+      ..reasoningEffort = reasoning.effort.name
+      ..reasoningSummary = reasoning.verbosity.name;
+    // Autonomy, budgets and the approval policy feed the gate directly.
+    _controller.configureAgentSettings(advanced);
     _controller.configureForSettings(settings, model.name);
   }
 
@@ -206,7 +359,7 @@ class _NeroChatScreenState extends State<NeroChatScreen>
           .map(_workspaceItemToChatAttachment)
           .toList(growable: false);
       _inputController.clear();
-      setState(() => _pendingAttachments = const <_ComposerAttachmentEntry>[]);
+      setState(() => _pendingAttachments = const <ComposerAttachmentEntry>[]);
       await _controller.sendPrompt(
         prompt,
         _settingsController.state,
@@ -302,6 +455,32 @@ class _NeroChatScreenState extends State<NeroChatScreen>
         error,
         stackTrace: stackTrace,
         message: 'Failed to open settings.',
+      );
+    }
+  }
+
+  Future<void> _openDestination(NeroDestination destination) async {
+    // The workspace screen needs live chat state, so it is handled here rather
+    // than by the shell's named-route handler.
+    if (destination.route == AppRoutes.workspace) {
+      await _openWorkspace();
+      return;
+    }
+    final handler = widget.onOpenDestination;
+    if (handler == null) {
+      return;
+    }
+    try {
+      await handler(destination);
+      // A pushed screen (Runs) may have queued a prompt for the composer.
+      if (mounted) {
+        _consumeReplayedPrompt();
+      }
+    } catch (error, stackTrace) {
+      AppErrorReporter.instance.report(
+        error,
+        stackTrace: stackTrace,
+        message: 'Failed to open ${destination.label}.',
       );
     }
   }
@@ -891,11 +1070,11 @@ class _NeroChatScreenState extends State<NeroChatScreen>
       return;
     }
     final loadingEntries = acceptedItems
-        .map((item) => _ComposerAttachmentEntry(item: item, isLoading: true))
+        .map((item) => ComposerAttachmentEntry(item: item, isLoading: true))
         .toList(growable: false);
     if (mounted) {
       setState(() {
-        _pendingAttachments = _dedupeComposerEntries(<_ComposerAttachmentEntry>[
+        _pendingAttachments = _dedupeComposerEntries(<ComposerAttachmentEntry>[
           ..._pendingAttachments,
           ...loadingEntries,
         ]);
@@ -1016,6 +1195,59 @@ class _NeroChatScreenState extends State<NeroChatScreen>
     });
   }
 
+  /// Bottom strip of the drawer: one-line MCP status (connected servers and
+  /// exposed tools, since that is the thing most likely to be silently off)
+  /// plus the settings entry.
+  Widget _buildSidebarFooter() {
+    final registry = widget.mcpRegistry;
+    final servers = registry?.servers ?? const <McpServerConfig>[];
+    final connected = servers
+        .where(
+          (server) =>
+              server.enabled &&
+              registry?.connectionFor(server.id).isConnected == true,
+        )
+        .length;
+    final tools = registry?.enabledTools.length ?? 0;
+    final statusText = servers.isEmpty
+        ? 'No MCP servers'
+        : '$connected/${servers.length} servers · $tools tool${tools == 1 ? '' : 's'} on';
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: <Widget>[
+          Row(
+            children: <Widget>[
+              Icon(
+                Icons.hub_outlined,
+                size: 13,
+                color: tools > 0 ? AppColors.tealBright : AppColors.textMuted,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  statusText,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.caption.copyWith(
+                    fontSize: 10.6,
+                    color: tools > 0
+                        ? AppColors.textSecondary
+                        : AppColors.textMuted,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          _SidebarFooterSettingsEntry(onOpenSettings: _openSettings),
+        ],
+      ),
+    );
+  }
+
   Future<void> _createNewChat() async {
     _persistDebounce?.cancel();
     if (_controller.isGenerating) {
@@ -1026,7 +1258,7 @@ class _NeroChatScreenState extends State<NeroChatScreen>
     _controller.setConversationContext(_activeConversationId);
     _controller.replaceMessages(const <ChatMessage>[]);
     _inputController.clear();
-    setState(() => _pendingAttachments = const <_ComposerAttachmentEntry>[]);
+    setState(() => _pendingAttachments = const <ComposerAttachmentEntry>[]);
     if (mounted) {
       Navigator.of(context).pop();
     }
@@ -1042,9 +1274,25 @@ class _NeroChatScreenState extends State<NeroChatScreen>
     _controller.setConversationContext(_activeConversationId);
     _controller.replaceMessages(conversation.messages);
     _inputController.clear();
-    setState(() => _pendingAttachments = const <_ComposerAttachmentEntry>[]);
+    setState(() => _pendingAttachments = const <ComposerAttachmentEntry>[]);
     if (mounted) {
       Navigator.of(context).pop();
+    }
+  }
+
+  /// Resets the transcript after the active conversation was deleted from the
+  /// sidebar. The history controller has already created/re-pointed a fresh
+  /// conversation; here the on-screen state follows.
+  Future<void> _startFreshConversationState() async {
+    _activeConversationId = _historyController.activeConversationId;
+    _controller.setConversationContext(_activeConversationId);
+    _controller.replaceMessages(
+      _historyController.activeConversation?.messages ??
+          const <ChatMessage>[],
+    );
+    _inputController.clear();
+    if (mounted) {
+      setState(() => _pendingAttachments = const <ComposerAttachmentEntry>[]);
     }
   }
 
@@ -1066,26 +1314,14 @@ class _NeroChatScreenState extends State<NeroChatScreen>
     );
   }
 
-  String _attachmentTypeLabel(WorkspaceItem item) {
-    final extension = item.extension?.toLowerCase();
-    return switch (extension) {
-      'pdf' => 'PDF document',
-      'doc' || 'docx' => 'Document',
-      'xls' || 'xlsx' => 'Spreadsheet',
-      'csv' => 'CSV document',
-      'ppt' || 'pptx' => 'Presentation',
-      'md' => 'Markdown document',
-      'txt' => 'Text document',
-      'json' => 'JSON document',
-      _ => 'File',
-    };
-  }
+  String _attachmentTypeLabel(WorkspaceItem item) =>
+      attachmentTypeLabelForExtension(item.extension);
 
-  List<_ComposerAttachmentEntry> _dedupeComposerEntries(
-    Iterable<_ComposerAttachmentEntry> entries,
+  List<ComposerAttachmentEntry> _dedupeComposerEntries(
+    Iterable<ComposerAttachmentEntry> entries,
   ) {
     final seen = <String>{};
-    final result = <_ComposerAttachmentEntry>[];
+    final result = <ComposerAttachmentEntry>[];
     for (final entry in entries) {
       final signature = _workspaceItemSignature(entry.item);
       if (!seen.add(signature)) {
@@ -1093,16 +1329,16 @@ class _NeroChatScreenState extends State<NeroChatScreen>
       }
       result.add(entry);
     }
-    return List<_ComposerAttachmentEntry>.unmodifiable(result);
+    return List<ComposerAttachmentEntry>.unmodifiable(result);
   }
 
-  List<_ComposerAttachmentEntry> _composerEntriesFromAttachments(
+  List<ComposerAttachmentEntry> _composerEntriesFromAttachments(
     List<ChatAttachment> attachments,
   ) {
     final now = DateTime.now().millisecondsSinceEpoch;
     return _dedupeComposerEntries(
       attachments.map(
-        (attachment) => _ComposerAttachmentEntry(
+        (attachment) => ComposerAttachmentEntry(
           item: WorkspaceItem(
             id: attachment.id,
             conversationId: _activeConversationId ?? 'standalone',
@@ -1127,8 +1363,8 @@ class _NeroChatScreenState extends State<NeroChatScreen>
 
   List<WorkspaceItem> _dedupeWorkspaceItems(
     Iterable<WorkspaceItem> items, {
-    Iterable<_ComposerAttachmentEntry> existingEntries =
-        const <_ComposerAttachmentEntry>[],
+    Iterable<ComposerAttachmentEntry> existingEntries =
+        const <ComposerAttachmentEntry>[],
   }) {
     final seen = <String>{
       for (final entry in existingEntries) _workspaceItemSignature(entry.item),
@@ -1160,6 +1396,11 @@ class _NeroChatScreenState extends State<NeroChatScreen>
     ].join('|');
   }
 
+  /// Reasoning display preferences, read live so a settings change applies to
+  /// already-rendered messages without a reload.
+  ReasoningPreferences get _reasoningPreferences =>
+      _settingsController.advanced.reasoning;
+
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
@@ -1169,16 +1410,24 @@ class _NeroChatScreenState extends State<NeroChatScreen>
     return Scaffold(
       key: _scaffoldKey,
       resizeToAvoidBottomInset: false,
-      drawer: _ChatSidebar(
+      drawer: ChatSidebar(
         historyController: _historyController,
         activeConversationId: _activeConversationId,
         onNewChat: _createNewChat,
         onSelectConversation: _openConversation,
-        onOpenWorkspace: _openWorkspace,
+        onDeleteConversation: (conversation) async {
+          await _historyController.deleteConversation(conversation.id);
+          if (conversation.id == _activeConversationId) {
+            await _startFreshConversationState();
+          }
+        },
+        destinations: widget.destinations,
+        onOpenDestination: _openDestination,
+        footer: _buildSidebarFooter(),
       ),
       body: Stack(
         children: [
-          const Positioned.fill(child: _PremiumBackdrop()),
+          const Positioned.fill(child: NeroBackdrop()),
           SafeArea(
             bottom: false,
             child: Column(
@@ -1227,6 +1476,9 @@ class _NeroChatScreenState extends State<NeroChatScreen>
                           isExporting: _exportingMessageIds.contains(
                             messageIds[index],
                           ),
+                          reasoningDisplayMode: _reasoningPreferences.displayMode,
+                          keepReasoningExpanded:
+                              _reasoningPreferences.keepExpandedOnComplete,
                         ),
                       );
                     },
@@ -1272,7 +1524,7 @@ class _NeroChatScreenState extends State<NeroChatScreen>
                                     14,
                                     10,
                                   ),
-                                  child: _InlineStatusBanner(
+                                  child: InlineBanner(
                                     message: controllerError,
                                     actionLabel:
                                         controllerError.contains(
@@ -1282,11 +1534,21 @@ class _NeroChatScreenState extends State<NeroChatScreen>
                                         : null,
                                     onAction:
                                         controllerError.contains(
-                                          'Sarvam API key',
+                                          'API key',
                                         )
                                         ? _openSettings
                                         : null,
                                   ),
+                                ),
+                              if (_replayedPromptBanner != null)
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    14,
+                                    0,
+                                    14,
+                                    10,
+                                  ),
+                                  child: _replayedPromptBanner!,
                                 ),
                               if (shouldShowTaskDock)
                                 Padding(
@@ -1301,7 +1563,7 @@ class _NeroChatScreenState extends State<NeroChatScreen>
                                     attachedToComposer: true,
                                   ),
                                 ),
-                              _Composer(
+                              Composer(
                                 controller: _inputController,
                                 focusNode: _inputFocusNode,
                                 isGenerating: _controller.isGenerating,
@@ -1310,12 +1572,40 @@ class _NeroChatScreenState extends State<NeroChatScreen>
                                 isImportingFiles: _isImportingFiles,
                                 pendingAttachments: _pendingAttachments,
                                 footerLabel: 'Nero',
-                                hintText: 'Ask Sarvam AI anything...',
+                                hintText: 'Ask Nero anything…',
                                 onImportFiles: _importFiles,
                                 onRemoveAttachment: _removePendingAttachment,
                                 onSend: _send,
                                 onStop: _stop,
                                 attachedPlanVisible: shouldShowTaskDock,
+                                statusStrip: _controller.isGenerating
+                                    ? ThinkingStrip(
+                                        reasoning:
+                                            _controller.activeReasoning,
+                                        isGenerating: true,
+                                        statusText: _controller.status,
+                                        onStop: _stop,
+                                      )
+                                    : null,
+                                modeSelector: AgentModeSelector(
+                                  mode: _controller.agentMode,
+                                  isOverridden:
+                                      _controller.hasAgentModeOverride,
+                                  isEnabled: !_controller.isGenerating,
+                                  onChanged: _controller.setAgentMode,
+                                ),
+                                afterInputSlots: <Widget>[
+                                  if (_controller.pendingApproval != null)
+                                    ApprovalCard(
+                                      approval: _controller.pendingApproval!,
+                                      onApprove: () {
+                                        _controller.approvePendingToolCall();
+                                        _scrollToBottom(animated: true);
+                                      },
+                                      onReject:
+                                          _controller.rejectPendingToolCall,
+                                    ),
+                                ],
                               ),
                             ],
                           );
@@ -1356,7 +1646,7 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
       child: Row(
         children: [
-          _HeaderIconButton(
+          HeaderIconButton(
             icon: Icons.menu_rounded,
             semanticLabel: 'Chats',
             onTap: onMenuTap,
@@ -1393,7 +1683,7 @@ class _TopBar extends StatelessWidget {
                       ),
                       const SizedBox(height: 1),
                       Text(
-                        '${_formatCompactTokens(contextTokens)} / ${_formatCompactTokens(modelContextTokens)}',
+                        '${formatCompactTokens(contextTokens)} / ${formatCompactTokens(modelContextTokens)}',
                         style: AppTextStyles.caption.copyWith(
                           fontSize: 10.5,
                           color: AppColors.textMuted,
@@ -1406,13 +1696,13 @@ class _TopBar extends StatelessWidget {
             ),
           ),
           const Spacer(),
-          _HeaderIconButton(
+          HeaderIconButton(
             icon: Icons.folder_open_rounded,
             semanticLabel: 'Workspace',
             onTap: onWorkspaceTap,
           ),
           const SizedBox(width: 10),
-          _HeaderIconButton(
+          HeaderIconButton(
             icon: Icons.tune_rounded,
             semanticLabel: 'Settings',
             onTap: onSettingsTap,
@@ -1422,270 +1712,6 @@ class _TopBar extends StatelessWidget {
     );
   }
 
-  String _formatCompactTokens(int value) {
-    if (value >= 1000) {
-      final compact = value / 1000;
-      final formatted = compact >= 100
-          ? compact.toStringAsFixed(0)
-          : compact >= 10
-          ? compact.toStringAsFixed(1)
-          : compact.toStringAsFixed(1);
-      return '${formatted}k';
-    }
-    return value.toString();
-  }
-}
-
-class _ChatSidebar extends StatefulWidget {
-  const _ChatSidebar({
-    required this.historyController,
-    required this.activeConversationId,
-    required this.onNewChat,
-    required this.onSelectConversation,
-    required this.onOpenWorkspace,
-  });
-
-  final ChatHistoryController historyController;
-  final String? activeConversationId;
-  final Future<void> Function() onNewChat;
-  final Future<void> Function(ChatConversation conversation)
-  onSelectConversation;
-  final Future<void> Function() onOpenWorkspace;
-
-  @override
-  State<_ChatSidebar> createState() => _ChatSidebarState();
-}
-
-class _ChatSidebarState extends State<_ChatSidebar> {
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: widget.historyController,
-      builder: (context, _) {
-        final conversations = widget.historyController.conversations;
-        return Drawer(
-          backgroundColor: AppColors.surfaceSoft,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.horizontal(right: Radius.circular(20)),
-          ),
-          child: SafeArea(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(18, 12, 12, 10),
-                  child: Row(
-                    children: [
-                      Text(
-                        'Nero',
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.textPrimary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Spacer(),
-                      _SidebarIconButton(
-                        icon: Icons.create_rounded,
-                        onTap: widget.onNewChat,
-                      ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: _SidebarActionTile(
-                    icon: Icons.add_rounded,
-                    label: 'New chat',
-                    onTap: widget.onNewChat,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
-                  child: _SidebarActionTile(
-                    icon: Icons.folder_open_rounded,
-                    label: 'Workspace',
-                    onTap: () async {
-                      Navigator.of(context).pop();
-                      await widget.onOpenWorkspace();
-                    },
-                  ),
-                ),
-                const Padding(
-                  padding: EdgeInsets.fromLTRB(18, 18, 18, 8),
-                  child: Text(
-                    'Recents',
-                    style: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(8, 0, 8, 12),
-                    itemCount: conversations.length,
-                    itemBuilder: (context, index) {
-                      final conversation = conversations[index];
-                      final selected =
-                          conversation.id == widget.activeConversationId;
-                      return _ConversationListTile(
-                        conversation: conversation,
-                        isSelected: selected,
-                        onTap: () => widget.onSelectConversation(conversation),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _SidebarActionTile extends StatelessWidget {
-  const _SidebarActionTile({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final Future<void> Function() onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.textSecondary, size: 18),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 14,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ConversationListTile extends StatelessWidget {
-  const _ConversationListTile({
-    required this.conversation,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final ChatConversation conversation;
-  final bool isSelected;
-  final Future<void> Function() onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Material(
-        color: isSelected ? AppColors.surfaceOverlayStrong : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-            child: Text(
-              conversation.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppTextStyles.caption.copyWith(
-                color: isSelected
-                    ? AppColors.textPrimary
-                    : AppColors.textSecondary,
-                fontSize: 12.5,
-                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SidebarIconButton extends StatelessWidget {
-  const _SidebarIconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final Future<void> Function() onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surfaceOverlay,
-      borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          width: 36,
-          height: 36,
-          alignment: Alignment.center,
-          child: Icon(icon, color: AppColors.textPrimary, size: 18),
-        ),
-      ),
-    );
-  }
-}
-
-class _HeaderIconButton extends StatelessWidget {
-  const _HeaderIconButton({
-    required this.icon,
-    required this.semanticLabel,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String semanticLabel;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surfaceGlass,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: AppColors.borderSoft),
-          ),
-          child: Icon(
-            icon,
-            size: 19,
-            semanticLabel: semanticLabel,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _MessageBubbleBinding extends StatelessWidget {
@@ -1702,10 +1728,14 @@ class _MessageBubbleBinding extends StatelessWidget {
     required this.onArtifactShareTap,
     required this.onInlineArtifactDownload,
     required this.isExporting,
+    required this.reasoningDisplayMode,
+    required this.keepReasoningExpanded,
   });
 
   final ChatSessionController controller;
   final String messageId;
+  final ReasoningDisplayMode reasoningDisplayMode;
+  final bool keepReasoningExpanded;
   final Future<void> Function(ChatMessage message) onHistoryTap;
   final void Function(ChatMessage message) onEditTap;
   final Future<void> Function(ChatMessage message) onCopyTap;
@@ -1737,6 +1767,8 @@ class _MessageBubbleBinding extends StatelessWidget {
       builder: (context, message, _) {
         return _MessageBubble(
           message: message,
+          reasoningDisplayMode: reasoningDisplayMode,
+          keepReasoningExpanded: keepReasoningExpanded,
           onHistoryTap: () => onHistoryTap(message),
           onEditTap: () => onEditTap(message),
           onCopyTap: () => onCopyTap(message),
@@ -1780,9 +1812,13 @@ class _MessageBubble extends StatefulWidget {
     required this.onInlineArtifactDownload,
     required this.isExporting,
     required this.onDiagramRenderResult,
+    required this.reasoningDisplayMode,
+    required this.keepReasoningExpanded,
   });
 
   final ChatMessage message;
+  final ReasoningDisplayMode reasoningDisplayMode;
+  final bool keepReasoningExpanded;
   final VoidCallback onHistoryTap;
   final VoidCallback onEditTap;
   final VoidCallback onCopyTap;
@@ -1900,6 +1936,13 @@ class _MessageBubbleState extends State<_MessageBubble> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            if (message.reasoning != null)
+              ReasoningBlock(
+                reasoning: message.reasoning!,
+                isStreaming: message.isStreaming,
+                displayMode: widget.reasoningDisplayMode,
+                keepExpandedOnComplete: widget.keepReasoningExpanded,
+              ),
             for (final group in activityGroups)
               _ActivityCard(
                 key: ValueKey(
@@ -1931,21 +1974,21 @@ class _MessageBubbleState extends State<_MessageBubble> {
                     runSpacing: 6,
                     children: [
                       if (message.isStreaming)
-                        const _MiniChip(
+                        const MiniChip(
                           text: 'Running',
                           icon: Icons.cloud_sync_rounded,
                           accent: AppColors.tealBright,
                         ),
                       if (message.isStreaming &&
                           message.tokensPerSecond != null)
-                        _MiniChip(
+                        MiniChip(
                           text:
                               '${message.tokensPerSecond!.toStringAsFixed(1)} tok/s',
                           icon: Icons.speed_rounded,
                         ),
                       if (!message.isStreaming &&
                           message.averageTokensPerSecond != null)
-                        _MiniChip(
+                        MiniChip(
                           text:
                               'Avg ${message.averageTokensPerSecond!.toStringAsFixed(1)} tok/s',
                           icon: Icons.av_timer_rounded,
@@ -2025,7 +2068,7 @@ class _UserMessageMetaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final label = _formatMessageDate(message.sentAtEpochMs);
+    final label = formatShortDate(message.sentAtEpochMs);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
@@ -2056,27 +2099,6 @@ class _UserMessageMetaRow extends StatelessWidget {
     );
   }
 
-  String _formatMessageDate(int? epochMs) {
-    if (epochMs == null || epochMs <= 0) {
-      return '';
-    }
-    final date = DateTime.fromMillisecondsSinceEpoch(epochMs);
-    const months = <String>[
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${date.day} ${months[date.month - 1]}';
-  }
 }
 
 class _UserMessageMetaIcon extends StatelessWidget {
@@ -3989,438 +4011,6 @@ class _AnimatedExecutionStepRowState extends State<_AnimatedExecutionStepRow>
   }
 }
 
-class _Composer extends StatelessWidget {
-  const _Composer({
-    required this.controller,
-    required this.focusNode,
-    required this.isGenerating,
-    required this.isInputEnabled,
-    required this.canSubmit,
-    required this.isImportingFiles,
-    required this.pendingAttachments,
-    required this.footerLabel,
-    required this.hintText,
-    required this.onImportFiles,
-    required this.onRemoveAttachment,
-    required this.onSend,
-    required this.onStop,
-    this.attachedPlanVisible = false,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final bool isGenerating;
-  final bool isInputEnabled;
-  final bool canSubmit;
-  final bool isImportingFiles;
-  final List<_ComposerAttachmentEntry> pendingAttachments;
-  final String footerLabel;
-  final String hintText;
-  final VoidCallback onImportFiles;
-  final void Function(String itemId) onRemoveAttachment;
-  final VoidCallback onSend;
-  final VoidCallback onStop;
-  final bool attachedPlanVisible;
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<TextEditingValue>(
-      valueListenable: controller,
-      builder: (context, value, child) {
-        final hasText = value.text.trim().isNotEmpty;
-        final hasLoadingAttachments = pendingAttachments.any(
-          (entry) => entry.isLoading,
-        );
-        final canSend =
-            canSubmit && hasText && !isGenerating && !hasLoadingAttachments;
-
-        return Container(
-          padding: const EdgeInsets.fromLTRB(6, 6, 6, 4),
-          decoration: BoxDecoration(
-            color: AppColors.surfaceComposer,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(attachedPlanVisible ? 0 : 20),
-              topRight: Radius.circular(attachedPlanVisible ? 0 : 20),
-              bottomLeft: const Radius.circular(20),
-              bottomRight: const Radius.circular(20),
-            ),
-            border: Border.all(color: AppColors.borderComposer),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (pendingAttachments.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: SizedBox(
-                      height: 58,
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            for (
-                              var index = 0;
-                              index < pendingAttachments.length;
-                              index++
-                            ) ...[
-                              SizedBox(
-                                width: 236,
-                                child: _PendingAttachmentChip(
-                                  item: pendingAttachments[index].item,
-                                  isLoading:
-                                      pendingAttachments[index].isLoading,
-                                  onRemove: () => onRemoveAttachment(
-                                    pendingAttachments[index].item.id,
-                                  ),
-                                ),
-                              ),
-                              if (index != pendingAttachments.length - 1)
-                                const SizedBox(width: 8),
-                            ],
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 56),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 16, 14, 16),
-                  child: TextField(
-                    controller: controller,
-                    focusNode: focusNode,
-                    enabled: isInputEnabled,
-                    minLines: 1,
-                    maxLines: 5,
-                    onSubmitted: (_) => canSend ? onSend() : null,
-                    cursorColor: AppColors.textOnDarkStrong,
-                    decoration: InputDecoration(
-                      hintText: hintText,
-                      filled: false,
-                      fillColor: Colors.transparent,
-                      hintStyle: AppTextStyles.hint.copyWith(
-                        color: AppColors.textMuted,
-                        fontSize: 12.5,
-                      ),
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      disabledBorder: InputBorder.none,
-                      isCollapsed: true,
-                      contentPadding: EdgeInsets.zero,
-                    ),
-                    style: AppTextStyles.body.copyWith(
-                      fontSize: 13,
-                      height: 1.25,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 6, 10, 6),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: isImportingFiles ? null : onImportFiles,
-                      behavior: HitTestBehavior.opaque,
-                      child: SizedBox(
-                        width: 22,
-                        height: 22,
-                        child: Center(
-                          child: isImportingFiles
-                              ? const SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 1.8,
-                                    color: AppColors.textComposerIcon,
-                                  ),
-                                )
-                              : const Icon(
-                                  Icons.attach_file_rounded,
-                                  size: 18,
-                                  color: AppColors.textComposerIcon,
-                                ),
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      footerLabel,
-                      style: AppTextStyles.caption.copyWith(
-                        fontSize: 11.25,
-                        color: AppColors.textComposerFooter,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    if (isGenerating)
-                      _ComposerActionButton(
-                        icon: Icons.stop_rounded,
-                        background: AppColors.red,
-                        foreground: AppColors.textPrimary,
-                        onTap: onStop,
-                      )
-                    else if (hasText)
-                      _ComposerActionButton(
-                        icon: Icons.arrow_upward_rounded,
-                        background: canSend
-                            ? AppColors.orange
-                            : AppColors.surfaceOverlayStrong,
-                        foreground: canSend
-                            ? AppColors.textOnDarkStrong
-                            : AppColors.textMuted,
-                        onTap: canSend ? onSend : null,
-                      )
-                    else
-                      const Padding(
-                        padding: EdgeInsets.only(right: 4),
-                        child: Icon(
-                          Icons.graphic_eq_rounded,
-                          size: 17,
-                          color: AppColors.textMuted,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _InlineStatusBanner extends StatelessWidget {
-  const _InlineStatusBanner({
-    required this.message,
-    this.actionLabel,
-    this.onAction,
-  });
-
-  final String message;
-  final String? actionLabel;
-  final VoidCallback? onAction;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceElevated,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderSoft),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.only(top: 1),
-            child: Icon(
-              Icons.info_outline_rounded,
-              size: 18,
-              color: AppColors.amber,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              message,
-              style: AppTextStyles.body.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 12.8,
-                height: 1.35,
-              ),
-            ),
-          ),
-          if (onAction != null && actionLabel != null) ...[
-            const SizedBox(width: 8),
-            TextButton(
-              onPressed: onAction,
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.orange,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 2,
-                ),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                actionLabel!,
-                style: AppTextStyles.body.copyWith(
-                  color: AppColors.orange,
-                  fontSize: 12.2,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _ComposerActionButton extends StatelessWidget {
-  const _ComposerActionButton({
-    required this.icon,
-    required this.background,
-    required this.foreground,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color background;
-  final Color foreground;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 30,
-        height: 30,
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        alignment: Alignment.center,
-        child: Icon(icon, size: 15, color: foreground),
-      ),
-    );
-  }
-}
-
-class _PendingAttachmentChip extends StatelessWidget {
-  const _PendingAttachmentChip({
-    required this.item,
-    required this.isLoading,
-    required this.onRemove,
-  });
-
-  final WorkspaceItem item;
-  final bool isLoading;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(10, 7, 10, 7),
-      decoration: BoxDecoration(
-        color: const Color(0xFF343331),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x22FFFFFF)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: _attachmentAccentForExtension(
-                item.extension,
-              ).withValues(alpha: 0.95),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              _attachmentIconForExtension(item.extension),
-              color: AppColors.textOnDarkStrong,
-              size: 18,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.body.copyWith(
-                    fontSize: 12.7,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                    height: 1.15,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  _attachmentTypeLabelForExtension(item.extension),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: AppTextStyles.bodySecondary.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 11.4,
-                    height: 1.1,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(left: 8),
-            child: SizedBox(
-              width: 12,
-              height: 12,
-              child: isLoading
-                  ? const Padding(
-                      padding: EdgeInsets.all(1.5),
-                      child: CircularProgressIndicator(
-                        strokeWidth: 1.4,
-                        color: AppColors.textSecondary,
-                      ),
-                    )
-                  : Material(
-                      color: const Color(0xFF9A9A97),
-                      shape: const CircleBorder(),
-                      child: InkWell(
-                        onTap: onRemove,
-                        customBorder: const CircleBorder(),
-                        child: const SizedBox(
-                          width: 12,
-                          height: 12,
-                          child: Icon(
-                            Icons.close_rounded,
-                            size: 9,
-                            color: Color(0xFF2C2B29),
-                          ),
-                        ),
-                      ),
-                    ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ComposerAttachmentEntry {
-  const _ComposerAttachmentEntry({required this.item, required this.isLoading});
-
-  final WorkspaceItem item;
-  final bool isLoading;
-
-  _ComposerAttachmentEntry copyWith({WorkspaceItem? item, bool? isLoading}) {
-    return _ComposerAttachmentEntry(
-      item: item ?? this.item,
-      isLoading: isLoading ?? this.isLoading,
-    );
-  }
-}
-
 class _UserMessageAttachmentList extends StatelessWidget {
   const _UserMessageAttachmentList({required this.attachments});
 
@@ -4543,22 +4133,6 @@ IconData _attachmentIconForExtension(String? extension) {
     'ppt' || 'pptx' => Icons.slideshow_rounded,
     'txt' || 'md' || 'json' => Icons.description_rounded,
     _ => Icons.description_outlined,
-  };
-}
-
-String _attachmentTypeLabelForExtension(String? extension) {
-  final normalized = extension?.toLowerCase();
-  return switch (normalized) {
-    'pdf' => 'PDF document',
-    'doc' || 'docx' => 'Document',
-    'xls' || 'xlsx' => 'Spreadsheet',
-    'csv' => 'CSV document',
-    'ppt' || 'pptx' => 'Presentation',
-    'md' => 'Markdown document',
-    'txt' => 'Text document',
-    'json' => 'JSON document',
-    'zip' || 'apk' => 'Archive',
-    _ => 'File',
   };
 }
 
@@ -4979,81 +4553,40 @@ final MarkdownStyleSheet _documentPreviewMarkdownStyleSheet =
       ),
     );
 
-class _MiniChip extends StatelessWidget {
-  const _MiniChip({
-    required this.text,
-    required this.icon,
-    this.accent = AppColors.textSecondary,
-  });
 
-  final String text;
-  final IconData icon;
-  final Color accent;
+/// Settings row pinned to the bottom of the drawer.
+class _SidebarFooterSettingsEntry extends StatelessWidget {
+  const _SidebarFooterSettingsEntry({required this.onOpenSettings});
+
+  final Future<void> Function() onOpenSettings;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceOverlay,
-        borderRadius: BorderRadius.circular(11),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: accent),
-          const SizedBox(width: 5),
-          Text(
-            text,
-            style: AppTextStyles.caption.copyWith(
-              color: accent == AppColors.textSecondary
-                  ? AppColors.textOnDarkMuted
-                  : accent,
-              fontSize: 11.5,
+    return InkWell(
+      onTap: onOpenSettings,
+      borderRadius: BorderRadius.circular(12),
+      child: const Padding(
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+        child: Row(
+          children: <Widget>[
+            Icon(Icons.tune_rounded, size: 16, color: AppColors.textSecondary),
+            SizedBox(width: 10),
+            Text(
+              'Settings',
+              style: TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12.6,
+                fontWeight: FontWeight.w500,
+              ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PremiumBackdrop extends StatelessWidget {
-  const _PremiumBackdrop();
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Container(color: AppColors.backgroundBackdrop),
-        Positioned(
-          top: -90,
-          right: -70,
-          child: _GlowOrb(color: AppColors.backdropGlowPrimary),
+            Spacer(),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 16,
+              color: AppColors.textMuted,
+            ),
+          ],
         ),
-        Positioned(
-          bottom: -120,
-          left: -90,
-          child: _GlowOrb(color: AppColors.backdropGlowSecondary),
-        ),
-      ],
-    );
-  }
-}
-
-class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 220,
-      height: 220,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(colors: [color, Colors.transparent]),
       ),
     );
   }

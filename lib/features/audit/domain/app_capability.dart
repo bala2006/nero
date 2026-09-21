@@ -147,6 +147,76 @@ class AppCapabilities {
     sensitivity: CapabilitySensitivity.medium,
   );
 
+  static const settingsReasoning = AppCapability(
+    key: 'settings.reasoning.update',
+    label: 'Update reasoning settings',
+    description: 'Change how reasoning is requested from the model and shown in chat.',
+    sensitivity: CapabilitySensitivity.low,
+  );
+
+  static const settingsAgentMode = AppCapability(
+    key: 'settings.agent_mode.update',
+    label: 'Update agent mode',
+    description: 'Change how autonomous the agent runs by default.',
+    sensitivity: CapabilitySensitivity.low,
+  );
+
+  static const settingsApprovalPolicy = AppCapability(
+    key: 'settings.approval_policy.update',
+    label: 'Update approval policy',
+    description:
+        'Change when the agent must ask for approval before running a tool.',
+    sensitivity: CapabilitySensitivity.high,
+    requiresApproval: true,
+  );
+
+  static const agentApproval = AppCapability(
+    key: 'agent.approval.decide',
+    label: 'Approve agent action',
+    description:
+        'Approve, edit or reject a tool call the agent is waiting on.',
+    sensitivity: CapabilitySensitivity.high,
+  );
+
+  static const mcpServerConnect = AppCapability(
+    key: 'mcp.server.connect',
+    label: 'Connect MCP server',
+    description:
+        'Connect to a remote Model Context Protocol server and discover its tools.',
+    sensitivity: CapabilitySensitivity.high,
+    requiresApproval: true,
+  );
+
+  static const mcpToolCall = AppCapability(
+    key: 'mcp.tool.call',
+    label: 'Call MCP tool',
+    description: 'Invoke a tool exposed by a connected MCP server.',
+    sensitivity: CapabilitySensitivity.high,
+  );
+
+  static const sandboxRun = AppCapability(
+    key: 'sandbox.run',
+    label: 'Run sandboxed code',
+    description:
+        'Execute user or model authored code inside the on-device sandbox.',
+    sensitivity: CapabilitySensitivity.high,
+  );
+
+  static const sandboxFileWrite = AppCapability(
+    key: 'sandbox.file.write',
+    label: 'Write sandbox file',
+    description: 'Create or modify a file inside a sandbox session.',
+    sensitivity: CapabilitySensitivity.medium,
+  );
+
+  static const memoryForget = AppCapability(
+    key: 'memory.forget',
+    label: 'Forget memory',
+    description: 'Delete a stored memory entry or semantic fact.',
+    sensitivity: CapabilitySensitivity.high,
+    requiresApproval: true,
+  );
+
   static const List<AppCapability> all = <AppCapability>[
     chatPrompt,
     webSearch,
@@ -165,6 +235,15 @@ class AppCapabilities {
     settingsApiKey,
     settingsModel,
     settingsReset,
+    settingsReasoning,
+    settingsAgentMode,
+    settingsApprovalPolicy,
+    agentApproval,
+    mcpServerConnect,
+    mcpToolCall,
+    sandboxRun,
+    sandboxFileWrite,
+    memoryForget,
   ];
 
   static AppCapability? byKey(String key) {

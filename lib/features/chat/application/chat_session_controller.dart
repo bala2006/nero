@@ -18,13 +18,19 @@ import '../../docs/application/doc_generation_service.dart';
 import '../../docs/application/inline_artifact_generator.dart';
 import '../../memory/application/semantic_fact_store.dart';
 import '../../memory/application/working_memory_store.dart';
+import '../../runtime/application/approval_gate.dart';
 import '../../runtime/application/run_coordinator.dart';
+import '../../runtime/application/tool_risk_classifier.dart';
+import '../../runtime/domain/agent_policy.dart';
 import '../../runtime/domain/runtime_progress_snapshot.dart';
 import '../../runtime/domain/runtime_run.dart';
+import '../../settings/advanced_settings.dart';
 import '../../settings/app_settings.dart';
+import '../../settings/nero_model_catalog.dart';
 import '../../tools/application/local_tool_runtime_service.dart';
 import '../../../platform/device/native_bridge_service.dart';
 import '../domain/chat_message.dart';
+import '../domain/reasoning_state.dart';
 import 'agent_orchestrator.dart';
 import 'artifact_strict_failure_handler.dart';
 import 'active_agent_task_session.dart';
@@ -52,12 +58,14 @@ import 'runtime_debug_signal_recorder.dart';
 import 'sarvam_api_client.dart';
 import 'sarvam_stream_client.dart';
 import 'reasoning_delta_merger.dart';
+import 'reasoning_session.dart';
 import 'streaming_assistant_round_executor.dart';
 import 'streaming_assistant_round_recovery.dart';
 import 'streaming_run_completion_coordinator.dart';
 import 'task_hint_policy.dart';
 import 'tool_dispatcher.dart';
 import 'tool_execution_coordinator.dart';
+import 'tool_executor_registry.dart';
 import 'tool_selector.dart';
 import 'web_tools.dart';
 
@@ -69,6 +77,7 @@ class ChatSessionController extends ChangeNotifier {
     caseSensitive: false,
   );
   static const _docBlockParser = DocBlockParser();
+  static const _modelCatalog = NeroModelCatalog();
 
   ChatSessionController({
     required ChatCompletionClient client,
@@ -90,7 +99,9 @@ class ChatSessionController extends ChangeNotifier {
     LocalToolRuntimeService? localToolRuntimeService,
     AgentOrchestrator? agentOrchestrator,
     RunCoordinator? runCoordinator,
-  }) : _client = client,
+    CapabilityCatalog? capabilityCatalog,
+  }) : _catalog = capabilityCatalog ?? CapabilityCatalog.instance,
+       _client = client,
        _webToolService = webToolService ?? WebToolService(),
        _docGenerationService = docGenerationService ?? DocGenerationService(),
        _agentTaskStore = agentTaskStore ?? AgentTaskStore(),
@@ -131,6 +142,8 @@ class ChatSessionController extends ChangeNotifier {
         );
   }
 
+  /// Dynamic tool source: built-ins plus any registered MCP/sandbox provider.
+  final CapabilityCatalog _catalog;
   final ChatCompletionClient _client;
   final WebToolService _webToolService;
   final DocGenerationService _docGenerationService;
@@ -203,12 +216,14 @@ class ChatSessionController extends ChangeNotifier {
         nativeDocxToolBridge: _nativeDocxToolBridge,
         nativeOutputToolBridge: _nativeOutputToolBridge,
       );
+  final ToolExecutorRegistry _toolExecutorRegistry = ToolExecutorRegistry();
   late final ToolExecutionCoordinator _toolExecutionCoordinator =
       ToolExecutionCoordinator(
         webToolService: _webToolService,
         auditLogStore: _auditLogStore,
         documentArtifactToolExecutor: _documentArtifactToolExecutor,
         nativeOutputToolBridge: _nativeOutputToolBridge,
+        externalExecutorRegistry: _toolExecutorRegistry,
       );
   final ResponseGuard _responseGuard;
   final WorkingMemoryStore _workingMemoryStore;
@@ -224,6 +239,25 @@ class ChatSessionController extends ChangeNotifier {
   late final RunCoordinator _runCoordinator;
   final AssistantThinkingSession _assistantThinkingSession =
       AssistantThinkingSession();
+
+  /// Settings that control agent autonomy, approvals and budgets.
+  AdvancedSettings _advancedSettings = const AdvancedSettings();
+  bool _agentModeOverrideSet = false;
+  AgentMode _agentModeOverride = AgentMode.chat;
+
+  /// Gate in front of every model-requested tool call. See [ApprovalGate].
+  late final ApprovalGate _approvalGate = ApprovalGate(
+    policyResolver: (toolName) => _advancedSettings.policyForTool(toolName),
+    riskResolver: _riskClassifier.classify,
+    overrideResolver: (toolName) =>
+        _externalApprovalOverrideResolver?.call(toolName),
+  )..onChanged = _handleApprovalGateChanged;
+  final ToolRiskClassifier _riskClassifier = ToolRiskClassifier();
+  ApprovalOverrideResolver? _externalApprovalOverrideResolver;
+  bool _approvalHeldTask = false;
+
+  /// Reasoning (extended thinking) accumulator for the active assistant turn.
+  final ReasoningSession _reasoningSession = ReasoningSession();
   final ChatMessageStateStore _messageStateStore = ChatMessageStateStore();
 
   String? _activeAssistantId;
@@ -265,6 +299,79 @@ class ChatSessionController extends ChangeNotifier {
   AgentTask? get _activeTask => _activeTaskSession.task;
   RuntimeProgressSnapshot? get runtimeProgressSnapshot =>
       _activeRunSession.progressSnapshot;
+
+  /// Live reasoning state for the in-flight turn, used by the composer strip.
+  ReasoningState get activeReasoning => _reasoningSession.snapshot();
+
+  /// The tool call the agent is currently blocked on, if any.
+  PendingApproval? get pendingApproval => _approvalGate.pending;
+
+  bool get isWaitingForApproval => _approvalGate.isWaiting;
+
+  /// Agent mode in force for the next turn: the composer's override when the
+  /// user picked one, otherwise the persisted default.
+  AgentMode get agentMode =>
+      _agentModeOverrideSet ? _agentModeOverride : _advancedSettings.agentMode;
+
+  bool get hasAgentModeOverride => _agentModeOverrideSet;
+
+  RunBudget get runBudget => _advancedSettings.budget;
+
+  ApprovalPolicy get approvalPolicy => _advancedSettings.approvalPolicy;
+
+  /// Applied by the shell whenever settings change.
+  void configureAgentSettings(AdvancedSettings settings) {
+    _advancedSettings = settings;
+  }
+
+  /// Composer-level mode switch for the next turn only.
+  void setAgentMode(AgentMode mode) {
+    _agentModeOverrideSet = mode != _advancedSettings.agentMode;
+    _agentModeOverride = mode;
+    notifyListeners();
+  }
+
+  /// Lets the shell contribute tool-specific approval overrides (MCP uses this
+  /// so a per-tool "always ask" beats the global policy).
+  set externalApprovalOverrideResolver(ApprovalOverrideResolver? resolver) {
+    _externalApprovalOverrideResolver = resolver;
+  }
+
+  void approvePendingToolCall() => _approvalGate.resolve(true);
+
+  void rejectPendingToolCall() => _approvalGate.resolve(false);
+
+  void _handleApprovalGateChanged() {
+    final pending = _approvalGate.pending;
+    if (pending != null) {
+      _status = 'Waiting for approval';
+      _setCurrentThought('Waiting for you to allow ${pending.title}');
+      // The task — and therefore the run dock — reports the pause, which is
+      // what `AgentTaskStatus.waitingUser` exists for.
+      _approvalHeldTask = true;
+      _activeTaskSession.apply(
+        (task) => task.copyWith(
+          status: AgentTaskStatus.waitingUser,
+          updatedAtEpochMs: DateTime.now().millisecondsSinceEpoch,
+        ),
+      );
+    } else if (_approvalHeldTask) {
+      _approvalHeldTask = false;
+      _status = _isGenerating ? 'Working' : 'Ready';
+      _activeTaskSession.refreshTaskStatus();
+    }
+    notifyListeners();
+  }
+
+  /// Registers an executor for tool names outside the built-in switch
+  /// (`mcp__*`, `sandbox_*`). Safe to call repeatedly.
+  void registerToolExecutor(ExternalToolExecutor executor) {
+    _toolExecutorRegistry.register(executor);
+  }
+
+  void unregisterToolExecutor(ExternalToolExecutor executor) {
+    _toolExecutorRegistry.unregister(executor);
+  }
 
   ValueListenable<ChatMessage>? messageListenable(String messageId) {
     return _messageStateStore.messageListenable(messageId);
@@ -323,10 +430,20 @@ class ChatSessionController extends ChangeNotifier {
     notifyListeners();
   }
 
+  String _resolveApiKey(NeroSettings settings) {
+    return settings.azureApiKey.trim();
+  }
+
+  String _providerLabel(NeroSettings settings) {
+    return _modelCatalog.isAzureModel(settings.selectedModelId)
+        ? 'Azure AI'
+        : 'the configured provider';
+  }
+
   void configureForSettings(NeroSettings settings, String modelName) {
     _modelName = modelName;
-    if (settings.sarvamApiKey.trim().isEmpty) {
-      _blockingReason = 'Add your Sarvam API key in Settings.';
+    if (_resolveApiKey(settings).isEmpty) {
+      _blockingReason = 'Add your ${_providerLabel(settings)} API key in Settings.';
       _status = _blockingReason!;
     } else {
       _blockingReason = null;
@@ -345,9 +462,10 @@ class ChatSessionController extends ChangeNotifier {
     if (trimmed.isEmpty || _isGenerating) {
       return;
     }
-    final apiKey = settings.sarvamApiKey.trim();
+    final apiKey = _resolveApiKey(settings);
     if (apiKey.isEmpty) {
-      _blockingReason = 'Add your Sarvam API key in Settings.';
+      _blockingReason =
+          'Add your ${_providerLabel(settings)} API key in Settings.';
       _status = _blockingReason!;
       notifyListeners();
       return;
@@ -403,18 +521,25 @@ class ChatSessionController extends ChangeNotifier {
     _status = 'Contacting Sarvam AI';
     _blockingReason = null;
     _assistantThinkingSession.clear();
-    _assistantThinkingSession.updateCurrentThought('Planning response');
+    _reasoningSession.begin();
     _requestStartedAt = DateTime.now();
     _accumulatedThinkingMs = 0;
-    _reasoningBuffer.clear(); // reset per-send reasoning accumulation
     _lastBroadcastProgressPhaseKey = null; // ensure first progress tick re-renders
     _resumeThinkingClock();
     _resetGenerationTelemetry();
-    await _startTask(trimmed);
-    _markStepRunning(
-      AgentStepKinds.interpretPrompt,
-      detail: 'Extracting intent, constraints, and expected output.',
-    );
+    // Chat mode answers directly, so nothing is planned or tracked. Plan and
+    // Agent modes create the task that the plan dock and step statuses hang
+    // off; every task mutation is a no-op when no task exists.
+    if (agentMode.requiresPlan) {
+      await _startTask(trimmed);
+      _markStepRunning(
+        AgentStepKinds.interpretPrompt,
+        detail: 'Extracting intent, constraints, and expected output.',
+      );
+    } else {
+      _activeRequestSession.clearSelectedTools();
+      _activeTaskSession.clear();
+    }
     _syncActiveAssistantThinking();
     notifyListeners();
 
@@ -426,6 +551,7 @@ class ChatSessionController extends ChangeNotifier {
       final coordinatorResult = await _runCoordinator.runTurn(
         apiKey: apiKey,
         settings: settings,
+        budget: _advancedSettings.budget,
         prompt: trimmed,
         conversationId: _conversationId,
         taskId: _activeTaskSession.task?.id,
@@ -462,6 +588,14 @@ class ChatSessionController extends ChangeNotifier {
       );
 
       final orchestrationResult = coordinatorResult.orchestrationResult;
+      final stopReason = orchestrationResult.stopReason;
+      if (stopReason != null) {
+        // The run hit its budget: the partial answer still renders, and the
+        // reason stays visible instead of the turn silently appearing complete.
+        _status = 'Stopped early';
+        _blockingReason = stopReason;
+        _setCurrentThought(stopReason);
+      }
       if (coordinatorResult.progressSnapshot != null) {
         _activeRunSession.applyProgressUpdate(
           coordinatorResult.run,
@@ -663,12 +797,16 @@ class ChatSessionController extends ChangeNotifier {
     _pauseThinkingClock();
     _setCurrentThought(null, completeCurrent: true);
     _requestStartedAt = null;
+    // Stopping while the gate is open would otherwise leave the agent loop
+    // suspended forever on a prompt nobody can answer.
+    _approvalGate.cancel();
     _finalizeStreamingMessage(cancelled: true);
     notifyListeners();
   }
 
   @override
   void dispose() {
+    _approvalGate.cancel();
     _streamSubscription?.cancel();
     _streamingClient?.cancel();
     _client.cancel();
@@ -769,17 +907,19 @@ class ChatSessionController extends ChangeNotifier {
         clearAverageTokensPerSecond: true,
       ),
       onReasoningDelta: (delta) {
-        _reasoningDeltaMerger.mergeDelta(_reasoningBuffer, delta);
-        _setCurrentThought(_reasoningBuffer.toString());
+        _reasoningSession.appendDelta(delta);
+        _syncActiveAssistantThinking();
+        notifyListeners();
       },
+      onReasoningPartBoundary: _reasoningSession.beginSegment,
+      onReasoningTokens: (tokens) => _reasoningSession.setReasoningTokens(
+        tokens,
+      ),
       onSubscriptionCreated: (subscription) {
         _streamSubscription = subscription;
       },
     );
   }
-
-  // Per-round reasoning accumulation buffer.  Reset at the start of each send.
-  final StringBuffer _reasoningBuffer = StringBuffer();
 
   // _mergeReasoningDelta, _stableToolCallKey, _hasRequiredToolArguments,
   // and _toolCallArgumentScore have been moved to ReasoningDeltaMerger and
@@ -832,10 +972,35 @@ class ChatSessionController extends ChangeNotifier {
       return;
     }
     _lastBroadcastProgressPhaseKey = newPhaseKey;
+    // The runtime phase is a good coarse caption for the reasoning block
+    // ("Searching the web…", "Writing…") while the agent works.
+    _reasoningSession.setPhase(
+      snapshot.currentPhase?.title ?? snapshot.nextPhase?.title,
+    );
+    _syncActiveAssistantThinking();
     notifyListeners();
   }
 
   Future<ToolExecutionResult> _executeToolCall(SarvamToolCall toolCall) async {
+    // Every model-requested tool call passes the gate first. When it decides a
+    // prompt is needed this future does not complete until the user answers, so
+    // the agent loop is paused rather than spinning.
+    final approved = await _approvalGate.request(
+      toolCallId: toolCall.id,
+      toolName: toolCall.name,
+      arguments: toolCall.arguments,
+      title: _approvalTitleFor(toolCall.name),
+    );
+    if (!approved) {
+      _setCurrentThought('Skipped ${toolCall.name}');
+      return ToolExecutionResult(
+        success: false,
+        summary: 'The user declined to run ${toolCall.name}.',
+        formattedOutput:
+            'The user declined this tool call. Do not retry it. Either answer '
+            'with what you already have or explain what you need instead.',
+      );
+    }
     return _toolExecutionCoordinator.execute(
       toolCall,
       conversationId: () => _conversationId,
@@ -849,26 +1014,31 @@ class ChatSessionController extends ChangeNotifier {
     );
   }
 
+  /// Human label for the approval prompt, taken from the capability catalog so
+  /// MCP and sandbox tools read the same as built-ins.
+  String _approvalTitleFor(String toolName) {
+    return CapabilityCatalog.instance.byToolName(toolName)?.displayName ??
+        toolName;
+  }
+
   /// Returns the content of the most recently sent user message in O(1).
   String? _latestUserPrompt() => _messageStateStore.latestUserContent;
 
 
   
 
+  /// Handles a coarse progress thought emitted around tool calls.
+  ///
+  /// These are status labels, not reasoning, so they become the reasoning
+  /// block's phase caption rather than fake reasoning text.
   void _setCurrentThought(String? nextThought, {bool completeCurrent = false}) {
-    final normalized = _assistantThinkingSession.normalizeThoughtText(
-      nextThought,
-    );
-    if (normalized == null && !completeCurrent) {
-      return;
+    if (completeCurrent) {
+      _reasoningSession.complete();
+      _pauseThinkingClock();
     }
-    final changed = _assistantThinkingSession.updateCurrentThought(
-      normalized,
-      completeCurrent: completeCurrent,
-    );
-    _resumeThinkingClock();
-    if (!changed) {
-      return;
+    if (nextThought != null && nextThought.trim().isNotEmpty) {
+      _reasoningSession.setPhase(nextThought.trim());
+      _resumeThinkingClock();
     }
     _syncActiveAssistantThinking();
     notifyListeners();
@@ -895,12 +1065,13 @@ class ChatSessionController extends ChangeNotifier {
                     ? fallbackContent!
                     : 'No response emitted.'))
         : '${existing.content}${fallbackSuffix ?? ''}';
+    _reasoningSession.complete();
     _replaceMessageAt(
       index,
       existing.copyWith(
         content: content,
         isStreaming: false,
-        thinkingSteps: _visibleThinkingSteps(includeCurrent: false),
+        reasoning: _reasoningSession.snapshot(),
         thinkingDurationMs: _finalThinkingDurationMs(),
         clearThinkingStartedAtEpochMs: true,
         activities: _visibleActivities(isStreaming: false),
@@ -935,7 +1106,7 @@ class ChatSessionController extends ChangeNotifier {
         content: content,
         isStreaming: isStreaming,
         tokensPerSecond: currentTokensPerSecond,
-        thinkingSteps: _visibleThinkingSteps(includeCurrent: isStreaming),
+        reasoning: _reasoningSession.snapshot(),
         thinkingDurationMs: isStreaming
             ? _streamingThinkingBaseDurationMs()
             : _finalThinkingDurationMs(),
@@ -965,7 +1136,7 @@ class ChatSessionController extends ChangeNotifier {
     _replaceMessageAt(
       index,
       existing.copyWith(
-        thinkingSteps: _visibleThinkingSteps(),
+        reasoning: _reasoningSession.snapshot(),
         thinkingDurationMs: _streamingThinkingBaseDurationMs(),
         thinkingStartedAtEpochMs: _thinkingStartedAt?.millisecondsSinceEpoch,
         activities: _visibleActivities(isStreaming: true),
@@ -987,17 +1158,17 @@ class ChatSessionController extends ChangeNotifier {
     attachGeneratedArtifact(activeAssistantId, artifact);
   }
 
-  List<String> _visibleThinkingSteps({bool includeCurrent = true}) {
-    return _assistantThinkingSession.visibleThinkingSteps(
-      includeCurrent: includeCurrent,
-    );
-  }
-
+  /// Tool activities only. Reasoning is rendered by `ReasoningBlock` from
+  /// [ChatMessage.reasoning], so the synthetic `thought` activity that used to
+  /// carry reasoning chunks is filtered out here.
   List<ChatActivity> _visibleActivities({required bool isStreaming}) {
-    return _assistantThinkingSession.visibleActivities(
-      isStreaming: isStreaming,
-      thoughtTitle: _formatThoughtTitle(isStreaming: isStreaming),
-    );
+    return _assistantThinkingSession
+        .visibleActivities(
+          isStreaming: isStreaming,
+          thoughtTitle: _formatThoughtTitle(isStreaming: isStreaming),
+        )
+        .where((activity) => activity.type != ChatActivityType.thought)
+        .toList(growable: false);
   }
 
   String _formatThoughtTitle({required bool isStreaming}) {
@@ -1109,8 +1280,10 @@ class ChatSessionController extends ChangeNotifier {
     );
   }
 
-  static final List<SarvamToolDefinition> _toolDefinitions =
-      CapabilityToolAdapter.modelVisibleToolDefinitions();
+  /// Model-visible tool definitions, resolved from the capability catalog so
+  /// runtime-registered tools (MCP servers, the sandbox) are included.
+  List<SarvamToolDefinition> get _toolDefinitions =>
+      CapabilityToolAdapter.modelVisibleToolDefinitions(catalog: _catalog);
 
   Future<void> _startTask(String prompt) async {
     _activeRequestSession.clearSelectedTools();

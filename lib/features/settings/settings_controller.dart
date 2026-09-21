@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart' as drift;
@@ -6,18 +7,24 @@ import 'package:drift/drift.dart' as drift;
 import '../audit/application/audit_log_store.dart';
 import '../audit/domain/app_capability.dart';
 import '../audit/domain/audit_log_entry.dart';
+import '../runtime/domain/agent_policy.dart';
 import '../../platform/database/app_database.dart';
+import '../../platform/database/app_metadata_store.dart';
 import '../../platform/storage/json_file_store.dart';
+import 'advanced_settings.dart';
 import 'app_settings.dart';
+import 'reasoning_settings.dart';
 
 class SettingsController extends ChangeNotifier {
   SettingsController({
     AppDatabase? database,
     JsonFileStore? store,
     AuditLogStore? auditLogStore,
+    AppMetadataStore? appMetadataStore,
   })  : _store = store ?? JsonFileStore.system(),
         _database = database ?? AppDatabase.instance,
         _auditLogStore = auditLogStore ?? AuditLogStore(),
+        _metadataStore = appMetadataStore ?? AppMetadataStore(),
         _state = NeroSettings.defaults();
 
   static const String _storageFileName = 'app_settings.json';
@@ -25,13 +32,19 @@ class SettingsController extends ChangeNotifier {
   final AppDatabase _database;
   final JsonFileStore _store;
   final AuditLogStore _auditLogStore;
+  final AppMetadataStore _metadataStore;
   NeroSettings _state;
+  AdvancedSettings _advanced = const AdvancedSettings();
   bool _loaded = false;
   String? _error;
   Timer? _apiKeyPersistDebounce;
   bool _hasPendingApiKeyChange = false;
 
   NeroSettings get state => _state;
+
+  /// Reasoning, agent-mode, approval and budget preferences.
+  AdvancedSettings get advanced => _advanced;
+
   bool get isLoaded => _loaded;
   String? get error => _error;
 
@@ -42,20 +55,19 @@ class SettingsController extends ChangeNotifier {
       final row = await (_database.select(_database.appSettingsEntries)
             ..where((table) => table.id.equals(1)))
           .getSingleOrNull();
-      final loaded = row == null
+      final normalized = row == null
           ? defaults
-          : NeroSettings(
-              sarvamApiKey: row.sarvamApiKey,
-              selectedModelId: row.selectedModelId,
+          : defaults.copyWith(
+              azureApiKey: row.azureApiKey.trim().isEmpty
+                  ? defaults.azureApiKey
+                  : row.azureApiKey,
+              selectedModelId: row.selectedModelId.trim().isEmpty
+                  ? defaults.selectedModelId
+                  : row.selectedModelId,
             );
-      final normalized = loaded.copyWith(
-        sarvamApiKey: loaded.sarvamApiKey.trim().isEmpty
-            ? defaults.sarvamApiKey
-            : loaded.sarvamApiKey,
-        selectedModelId: 'sarvam-105b',
-      );
       _state = normalized;
-      if (row == null || !_isSameSettings(loaded, normalized)) {
+      _advanced = await _loadAdvancedSettings();
+      if (row == null) {
         await _persist();
       }
       _loaded = true;
@@ -67,8 +79,8 @@ class SettingsController extends ChangeNotifier {
     }
   }
 
-  Future<void> setSarvamApiKey(String apiKey) async {
-    _state = _state.copyWith(sarvamApiKey: apiKey.trim());
+  Future<void> setAzureApiKey(String apiKey) async {
+    _state = _state.copyWith(azureApiKey: apiKey.trim());
     _hasPendingApiKeyChange = true;
     _scheduleApiKeyPersist();
   }
@@ -85,12 +97,83 @@ class SettingsController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> setReasoningPreferences(ReasoningPreferences preferences) async {
+    _advanced = _advanced.copyWith(reasoning: preferences);
+    await _persistAdvanced();
+    notifyListeners();
+  }
+
+  Future<void> setAgentMode(AgentMode mode) async {
+    _advanced = _advanced.copyWith(agentMode: mode);
+    await _persistAdvanced();
+    notifyListeners();
+  }
+
+  Future<void> setApprovalPolicy(ApprovalPolicy policy) async {
+    _advanced = _advanced.copyWith(approvalPolicy: policy);
+    await _persistAdvanced();
+    await _auditLogStore.record(
+      capabilityKey: AppCapabilities.settingsApprovalPolicy.key,
+      title: AppCapabilities.settingsApprovalPolicy.label,
+      detail: 'Approval policy set to ${policy.label}.',
+      status: AuditLogStatus.success,
+    );
+    notifyListeners();
+  }
+
+  Future<void> setRunBudget(RunBudget budget) async {
+    _advanced = _advanced.copyWith(budget: budget);
+    await _persistAdvanced();
+    notifyListeners();
+  }
+
+  Future<void> setToolApprovalOverride(
+    String toolName,
+    ApprovalPolicy policy,
+  ) async {
+    _advanced = _advanced.withToolApprovalOverride(toolName, policy);
+    await _persistAdvanced();
+    notifyListeners();
+  }
+
+  Future<void> clearToolApprovalOverride(String toolName) async {
+    _advanced = _advanced.withoutToolApprovalOverride(toolName);
+    await _persistAdvanced();
+    notifyListeners();
+  }
+
+  Future<AdvancedSettings> _loadAdvancedSettings() async {
+    final raw = await _metadataStore.read(AdvancedSettings.storageKey);
+    if (raw == null || raw.trim().isEmpty) {
+      return const AdvancedSettings();
+    }
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) {
+        return AdvancedSettings.fromJson(decoded);
+      }
+      if (decoded is Map) {
+        return AdvancedSettings.fromJson(Map<String, dynamic>.from(decoded));
+      }
+    } catch (_) {}
+    return const AdvancedSettings();
+  }
+
+  Future<void> _persistAdvanced() async {
+    await _metadataStore.write(
+      AdvancedSettings.storageKey,
+      jsonEncode(_advanced.toJson()),
+    );
+  }
+
   Future<void> reset() async {
     _apiKeyPersistDebounce?.cancel();
     _apiKeyPersistDebounce = null;
     _hasPendingApiKeyChange = false;
     _state = NeroSettings.defaults();
+    _advanced = const AdvancedSettings();
     await _persist();
+    await _persistAdvanced();
     await _auditLogStore.record(
       capabilityKey: AppCapabilities.settingsReset.key,
       title: AppCapabilities.settingsReset.label,
@@ -104,7 +187,7 @@ class SettingsController extends ChangeNotifier {
     await _database.into(_database.appSettingsEntries).insertOnConflictUpdate(
           AppSettingsEntriesCompanion(
             id: const drift.Value(1),
-            sarvamApiKey: drift.Value(_state.sarvamApiKey),
+            azureApiKey: drift.Value(_state.azureApiKey),
             selectedModelId: drift.Value(_state.selectedModelId),
           ),
         );
@@ -112,14 +195,14 @@ class SettingsController extends ChangeNotifier {
 
   void _scheduleApiKeyPersist() {
     _apiKeyPersistDebounce?.cancel();
-    final apiKeySnapshot = _state.sarvamApiKey;
+    final apiKeySnapshot = _state.azureApiKey;
     _apiKeyPersistDebounce = Timer(const Duration(milliseconds: 240), () {
       unawaited(_persistApiKeySnapshot(apiKeySnapshot));
     });
   }
 
   Future<void> _persistApiKeySnapshot(String apiKeySnapshot) async {
-    if (!_hasPendingApiKeyChange || _state.sarvamApiKey != apiKeySnapshot) {
+    if (!_hasPendingApiKeyChange || _state.azureApiKey != apiKeySnapshot) {
       return;
     }
     _hasPendingApiKeyChange = false;
@@ -127,15 +210,10 @@ class SettingsController extends ChangeNotifier {
     await _auditLogStore.record(
       capabilityKey: AppCapabilities.settingsApiKey.key,
       title: AppCapabilities.settingsApiKey.label,
-      detail: 'Sarvam API key updated on device.',
+      detail: 'Azure AI key updated on device.',
       status: AuditLogStatus.success,
     );
     notifyListeners();
-  }
-
-  bool _isSameSettings(NeroSettings left, NeroSettings right) {
-    return left.sarvamApiKey == right.sarvamApiKey &&
-        left.selectedModelId == right.selectedModelId;
   }
 
   Future<void> _migrateLegacyJsonIfNeeded() async {
@@ -151,7 +229,7 @@ class SettingsController extends ChangeNotifier {
     await _database.into(_database.appSettingsEntries).insert(
           AppSettingsEntriesCompanion(
             id: const drift.Value(1),
-            sarvamApiKey: drift.Value(loaded.sarvamApiKey),
+            azureApiKey: drift.Value(loaded.azureApiKey),
             selectedModelId: drift.Value(loaded.selectedModelId),
           ),
           mode: drift.InsertMode.insertOrReplace,

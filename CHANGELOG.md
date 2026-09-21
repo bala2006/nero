@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **Reasoning is actually requested**: the Azure Responses payload now sends
+  `reasoning.summary`, without which the provider never emitted reasoning deltas.
+  Reasoning is captured as a first-class `ReasoningState` with a collapsible
+  streamed block, elapsed time, token estimate and a live phase caption.
+- **Runtime capability catalog**: `CapabilityProvider` / `CapabilityCatalog`
+  replace the compile-time tool list, so tools can appear at runtime.
+- **MCP client**: Streamable-HTTP and SSE transports, initialize/tools-list/tools-call,
+  server management with connection testing, per-tool exposure and approval
+  settings, an audit trail, and a tool executor wired into the chat loop. Server
+  text and schemas are sanitised before they reach the model.
+- **Human approval gate**: every tool call can pause the run for an explicit
+  allow/deny, honouring the global policy, per-tool overrides and MCP server
+  settings. The active task reports `waitingUser` while it waits.
+- **Agent modes and budgets**: composer Chat/Plan/Agent selector; Plan and Agent
+  modes track a plan, Chat answers directly. `RunBudget` now bounds model
+  rounds, tool calls and wall-clock time, returning the partial answer with a
+  visible reason instead of looping.
+- **On-device sandbox**: sessions, a permission policy that denies by default,
+  and a WebView execution backend for JavaScript and HTML with console capture.
+  The controller is app-lifetime: the shell mounts the off-screen WebView host,
+  so the agent's `sandbox_run_code` tool runs code while no sandbox screen is
+  open, against transient sessions that never touch the user's scratchpads.
+- **Inspection screens**: Skills (step graphs and quality gates), Memory
+  (entries and learned facts, with per-item forget), and Runs (history with
+  phase timelines, event logs, resumability, and "Run again" which re-issues a
+  run's original prompt into the composer).
+
+### Changed
+- Renamed the legacy `SarvamModelCatalog` / `SarvamModelInfo` to
+  `NeroModelCatalog` / `NeroModelInfo` and collapsed the retired `sarvamApiKey`
+  settings field into `azureApiKey` (database schema v9 migrates the stored
+  key). Composer hint text no longer references the retired provider.
+
+### Changed
+- Split the 4,000-line chat screen into `presentation/{screens,widgets,rich}`
+  and extracted a shared `lib/core/widgets` kit, removing the duplicated
+  backdrop, top bar and section card from the chat and settings screens.
+- Added an app shell with a navigation drawer and a named-route table.
+- Settings gained Reasoning, Agent and MCP sections.
+
+### Fixed
+- Reasoning blocks, plan status and tool activity are no longer synthesised
+  from tool labels.
+
 ## [1.0.0] - 2026-06-12
 
 ### Added

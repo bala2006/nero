@@ -4,7 +4,7 @@ import 'dart:convert';
 import '../../audit/application/audit_log_store.dart';
 import '../../audit/domain/app_capability.dart';
 import '../../audit/domain/audit_log_entry.dart';
-import '../../packaging/application/zip_packaging_service.dart';
+import '../../packaging/application/project_packaging_orchestrator.dart';
 import '../../projects/domain/project_artifact.dart';
 import '../../workspace/application/workspace_store.dart';
 import '../../workspace/domain/workspace_item.dart';

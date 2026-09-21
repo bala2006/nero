@@ -21,6 +21,7 @@ import 'package:nero/features/memory/domain/semantic_fact.dart';
 import 'package:nero/features/runtime/application/run_coordinator.dart';
 import 'package:nero/features/runtime/application/runtime_ledger_service.dart';
 import 'package:nero/features/runtime/application/runtime_run_store.dart';
+import 'package:nero/features/runtime/domain/agent_policy.dart';
 import 'package:nero/features/runtime/domain/runtime_operation_ledger_record.dart';
 import 'package:nero/features/runtime/domain/runtime_run.dart';
 import 'package:nero/features/runtime/domain/runtime_run_node.dart';
@@ -55,7 +56,7 @@ void main() {
     final result = await coordinator.runTurn(
       apiKey: 'sk_test',
       settings: const NeroSettings(
-        sarvamApiKey: 'sk_test',
+        azureApiKey: 'sk_test',
         selectedModelId: 'sarvam-105b',
       ),
       prompt: 'Generate a document',
@@ -173,7 +174,7 @@ void main() {
     final result = await coordinator.runTurn(
       apiKey: 'sk_test',
       settings: const NeroSettings(
-        sarvamApiKey: 'sk_test',
+        azureApiKey: 'sk_test',
         selectedModelId: 'sarvam-105b',
       ),
       prompt: 'Generate a docx about capabilities',
@@ -255,7 +256,7 @@ void main() {
       () => coordinator.runTurn(
         apiKey: 'sk_test',
         settings: const NeroSettings(
-          sarvamApiKey: 'sk_test',
+          azureApiKey: 'sk_test',
           selectedModelId: 'sarvam-105b',
         ),
         prompt: 'Generate a PDF about capabilities',
@@ -302,7 +303,7 @@ void main() {
     final result = await coordinator.runTurn(
       apiKey: 'sk_test',
       settings: const NeroSettings(
-        sarvamApiKey: 'sk_test',
+        azureApiKey: 'sk_test',
         selectedModelId: 'sarvam-105b',
       ),
       prompt: 'Create a docx about capabilities',
@@ -353,7 +354,7 @@ void main() {
     final result = await coordinator.runTurn(
       apiKey: 'sk_test',
       settings: const NeroSettings(
-        sarvamApiKey: 'sk_test',
+        azureApiKey: 'sk_test',
         selectedModelId: 'sarvam-105b',
       ),
       prompt: 'research and compare claude vs openai',
@@ -434,7 +435,7 @@ void main() {
     final result = await coordinator.runTurn(
       apiKey: 'sk_test',
       settings: const NeroSettings(
-        sarvamApiKey: 'sk_test',
+        azureApiKey: 'sk_test',
         selectedModelId: 'sarvam-105b',
       ),
       prompt: 'What is recursion?',
@@ -828,6 +829,7 @@ class _FakeAgentOrchestrator extends AgentOrchestrator {
     required Future<ToolExecutionResult> Function(SarvamToolCall toolCall)
     executeToolCall,
     required AutoContinueDecider shouldAutoContinue,
+    RunBudget budget = RunBudget.unlimited,
     AgentOrchestratorHooks hooks = const AgentOrchestratorHooks(),
   }) {
     return _handler(hooks);

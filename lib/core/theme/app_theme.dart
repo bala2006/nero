@@ -1,3 +1,5 @@
+import 'package:flutter/cupertino.dart'
+    show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
@@ -27,6 +29,14 @@ class AppTheme {
         centerTitle: false,
         foregroundColor: AppColors.textPrimary,
       ),
+      // One shared transition for every platform so pushed screens (MCP,
+      // sandbox, settings, runs) feel like the same app.
+      pageTransitionsTheme: PageTransitionsTheme(
+        builders: <TargetPlatform, PageTransitionsBuilder>{
+          for (final platform in TargetPlatform.values)
+            platform: const CupertinoPageTransitionsBuilder(),
+        },
+      ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surface,
@@ -46,6 +56,52 @@ class AppTheme {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: AppColors.tealBright, width: 1.2),
+        ),
+      ),
+      scrollbarTheme: ScrollbarThemeData(
+        thickness: const WidgetStatePropertyAll<double>(2),
+        radius: const Radius.circular(999),
+        thumbColor: const WidgetStatePropertyAll<Color>(
+          AppColors.borderStrong,
+        ),
+        minThumbLength: 36,
+      ),
+      progressIndicatorTheme: const ProgressIndicatorThemeData(
+        color: AppColors.orange,
+        linearTrackColor: AppColors.surfaceOverlay,
+      ),
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.disabled)) {
+            return AppColors.textMuted;
+          }
+          return AppColors.textPrimary;
+        }),
+        trackColor: WidgetStateProperty.resolveWith((states) {
+          if (states.contains(WidgetState.selected)) {
+            return AppColors.tealBright;
+          }
+          return AppColors.surfaceOverlayStrong;
+        }),
+        trackOutlineColor: const WidgetStatePropertyAll<Color>(
+          Colors.transparent,
+        ),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.surfaceElevated,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+          side: const BorderSide(color: AppColors.borderSoft),
+        ),
+        titleTextStyle: AppTextStyles.titleSmall,
+        contentTextStyle: AppTextStyles.bodySecondary.copyWith(fontSize: 12.8),
+      ),
+      snackBarTheme: const SnackBarThemeData(
+        backgroundColor: AppColors.surfaceElevated,
+        contentTextStyle: TextStyle(color: AppColors.textPrimary),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
       ),
     );

@@ -32,7 +32,10 @@ class AgentTaskEntries extends Table {
 
 class AppSettingsEntries extends Table {
   IntColumn get id => integer()();
-  TextColumn get sarvamApiKey => text()();
+
+  /// Azure AI key. Renamed from `sarvamApiKey` in schema v9; the v9 migration
+  /// copies the old column's value across so no credential is lost.
+  TextColumn get azureApiKey => text()();
   TextColumn get selectedModelId => text()();
 
   @override
@@ -239,7 +242,7 @@ class AppDatabase extends _$AppDatabase {
   static final AppDatabase instance = AppDatabase._internal();
 
   @override
-  int get schemaVersion => 8;
+  int get schemaVersion => 9;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -289,6 +292,13 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 8) {
         await _createIndexes(m);
+      }
+      if (from < 9 && await _columnExists('app_settings_entries', 'sarvamApiKey')) {
+        // v9 renamed `sarvamApiKey` to `azureApiKey`; keep the credential.
+        await m.database.customStatement(
+          'ALTER TABLE "app_settings_entries" RENAME COLUMN '
+          '"sarvamApiKey" TO "azureApiKey"',
+        );
       }
     },
   );
@@ -381,5 +391,14 @@ class AppDatabase extends _$AppDatabase {
       ],
     ).getSingleOrNull();
     return result != null;
+  }
+
+  Future<bool> _columnExists(String tableName, String columnName) async {
+    final columns = await customSelect(
+      'PRAGMA table_info("$tableName")',
+    ).get();
+    return columns.any(
+      (row) => row.data['name']?.toString() == columnName,
+    );
   }
 }

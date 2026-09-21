@@ -116,6 +116,38 @@ class ChatHistoryController extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Deletes a conversation and everything referencing it. When the deleted
+  /// conversation was active, the most recent remaining one becomes active
+  /// (or a fresh empty one is created, so the screen is never stuck).
+  Future<void> deleteConversation(String conversationId) async {
+    _conversations.removeWhere(
+      (conversation) => conversation.id == conversationId,
+    );
+    await _database.batch((batch) {
+      batch.deleteWhere(
+        _database.chatConversationEntries,
+        (table) => table.id.equals(conversationId),
+      );
+      // Entries that only existed to serve this conversation go with it; the
+      // stores below treat unknown conversation ids as no-ops, so removing the
+      // rows here is purely hygiene.
+      batch.deleteWhere(
+        _database.agentTaskEntries,
+        (table) => table.conversationId.equals(conversationId),
+      );
+    });
+    if (_activeConversationId == conversationId) {
+      if (_conversations.isNotEmpty) {
+        _activeConversationId = _conversations.first.id;
+      } else {
+        await createConversation();
+        return;
+      }
+      await _persistActiveConversationId();
+    }
+    notifyListeners();
+  }
+
   Future<void> upsertConversationMessages(
     String conversationId,
     List<ChatMessage> messages,
