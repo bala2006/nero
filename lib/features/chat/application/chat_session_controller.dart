@@ -278,8 +278,10 @@ class ChatSessionController extends ChangeNotifier {
   final ActiveRequestSession _activeRequestSession = ActiveRequestSession();
   int _generationEpoch = 0;
   List<ChatMessage> get messages => _messageStateStore.messages;
-  List<String> get messageIds =>
-      List<String>.unmodifiable(messages.map((message) => message.id));
+
+  /// Cached, allocation-free id list — rebuilt only on structural changes, so
+  /// reading it every build is O(1) instead of O(n) over message contents.
+  List<String> get messageIds => _messageStateStore.messageIds;
   ValueListenable<int> get messageListVersionListenable =>
       _messageStateStore.messageListVersionListenable;
   bool get isGenerating => _isGenerating;
@@ -1100,24 +1102,25 @@ class ChatSessionController extends ChangeNotifier {
     final currentTokensPerSecond = isStreaming
         ? _calculateLiveTokensPerSecond(revealedLength: content.length)
         : null;
-    _replaceMessageAt(
-      index,
-      existing.copyWith(
-        content: content,
-        isStreaming: isStreaming,
-        tokensPerSecond: currentTokensPerSecond,
-        reasoning: _reasoningSession.snapshot(),
-        thinkingDurationMs: isStreaming
-            ? _streamingThinkingBaseDurationMs()
-            : _finalThinkingDurationMs(),
-        thinkingStartedAtEpochMs: isStreaming
-            ? _thinkingStartedAt?.millisecondsSinceEpoch
-            : null,
-        activities: _visibleActivities(isStreaming: isStreaming),
-        clearAverageTokensPerSecond: clearAverageTokensPerSecond,
-        clearThinkingStartedAtEpochMs: !isStreaming,
-      ),
+    final next = existing.copyWith(
+      content: content,
+      isStreaming: isStreaming,
+      tokensPerSecond: currentTokensPerSecond,
+      reasoning: _reasoningSession.snapshot(),
+      thinkingDurationMs: isStreaming
+          ? _streamingThinkingBaseDurationMs()
+          : _finalThinkingDurationMs(),
+      thinkingStartedAtEpochMs: isStreaming
+          ? _thinkingStartedAt?.millisecondsSinceEpoch
+          : null,
+      activities: _visibleActivities(isStreaming: isStreaming),
+      clearAverageTokensPerSecond: clearAverageTokensPerSecond,
+      clearThinkingStartedAtEpochMs: !isStreaming,
     );
+    // Streaming updates ride the per-message notifier only: the transcript
+    // ListView (keyed on the message-id list) is not notified, so a delta
+    // rebuilds exactly one bubble instead of every visible one.
+    _messageStateStore.syncMessage(next);
     _tokensPerSecond = currentTokensPerSecond ?? _tokensPerSecond;
     notifyListeners();
   }
@@ -1133,15 +1136,15 @@ class ChatSessionController extends ChangeNotifier {
       return;
     }
     final existing = currentMessages[index];
-    _replaceMessageAt(
-      index,
-      existing.copyWith(
-        reasoning: _reasoningSession.snapshot(),
-        thinkingDurationMs: _streamingThinkingBaseDurationMs(),
-        thinkingStartedAtEpochMs: _thinkingStartedAt?.millisecondsSinceEpoch,
-        activities: _visibleActivities(isStreaming: true),
-      ),
+    final next = existing.copyWith(
+      reasoning: _reasoningSession.snapshot(),
+      thinkingDurationMs: _streamingThinkingBaseDurationMs(),
+      thinkingStartedAtEpochMs: _thinkingStartedAt?.millisecondsSinceEpoch,
+      activities: _visibleActivities(isStreaming: true),
     );
+    // Silent sync — reasoning/activity ticks must not notify the controller
+    // on top of the caller that triggered them.
+    _messageStateStore.syncMessage(next);
   }
 
   void _recordToolActivity(ChatActivity activity) {

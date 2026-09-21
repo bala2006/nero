@@ -102,7 +102,9 @@ class _StreamingMarkdownTextBlock extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: MarkdownBody(
         data: trimmed,
-        selectable: true,
+        // Selection is provided by the SelectionArea that wraps each
+        // message bubble; per-widget selectable text here would rebuild
+        // the entire paragraph on every streaming delta.
         shrinkWrap: true,
         softLineBreak: true,
         styleSheet: _markdownStyleSheet,
@@ -127,7 +129,9 @@ class _MarkdownTextBlock extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 4),
       child: MarkdownBody(
         data: trimmed,
-        selectable: true,
+        // Selection is provided by the SelectionArea that wraps each
+        // message bubble; per-widget selectable text here would rebuild
+        // the entire paragraph on every streaming delta.
         shrinkWrap: true,
         softLineBreak: true,
         styleSheet: _markdownStyleSheet,

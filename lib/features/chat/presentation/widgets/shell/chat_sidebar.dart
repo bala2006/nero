@@ -197,10 +197,14 @@ class _ChatSidebarState extends State<ChatSidebar> {
                           },
                         ),
                 ),
-                // Footer keeps a fixed slot so the list never jumps when the
-                // status row appears or disappears.
-                SizedBox(
-                  height: _footerReservedHeight,
+                // Footer keeps a reserved slot so the list never jumps when
+                // the status row appears or disappears. minHeight (not a
+                // fixed height) so richer footer content grows instead of
+                // overflowing the way a hard SizedBox height would.
+                ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: _footerReservedHeight,
+                  ),
                   child: widget.footer ?? const SizedBox.shrink(),
                 ),
               ],

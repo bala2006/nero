@@ -1213,7 +1213,7 @@ class _NeroChatScreenState extends State<NeroChatScreen>
         ? 'No MCP servers'
         : '$connected/${servers.length} servers · $tools tool${tools == 1 ? '' : 's'} on';
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 2, 12, 6),
+      padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1241,7 +1241,7 @@ class _NeroChatScreenState extends State<NeroChatScreen>
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 2),
           _SidebarFooterSettingsEntry(onOpenSettings: _openSettings),
         ],
       ),
@@ -1933,9 +1933,12 @@ class _MessageBubbleState extends State<_MessageBubble> {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: RepaintBoundary(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        // SelectionArea wraps the whole bubble: text selection still works
+        // without paying for per-widget selectable text inside the markdown        // renderer, which rebuilds every streaming frame.
+        child: SelectionArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             if (message.reasoning != null)
               ReasoningBlock(
                 reasoning: message.reasoning!,
@@ -2008,7 +2011,8 @@ class _MessageBubbleState extends State<_MessageBubble> {
                 ],
               ),
             ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -4566,7 +4570,7 @@ class _SidebarFooterSettingsEntry extends StatelessWidget {
       onTap: onOpenSettings,
       borderRadius: BorderRadius.circular(12),
       child: const Padding(
-        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+        padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
         child: Row(
           children: <Widget>[
             Icon(Icons.tune_rounded, size: 16, color: AppColors.textSecondary),
