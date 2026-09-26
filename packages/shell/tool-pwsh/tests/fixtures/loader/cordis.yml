@@ -1,0 +1,27 @@
+# Minimal tool-pwsh composition: real app boot path, real pwsh executor, real
+# foreground + background tool calls; driven by the package's loader.spec.ts.
+- id: system-prompt
+  name: '@nero/nero-system-prompt'
+
+- id: tools
+  name: '@nero/nero-tools'
+
+- id: subprocess
+  name: '@nero/nero-subprocess-local'
+
+- id: bash
+  name: '@nero/nero-pwsh-local'
+  config:
+    graceMs: 200
+
+- id: shell-env
+  name: '@nero/nero-shell-env'
+
+- id: tasks
+  name: '@nero/nero-jobs-local'
+
+- id: tool-jobs
+  name: '@nero/nero-tool-jobs'
+
+- id: tool-pwsh
+  name: '@nero/nero-tool-pwsh'

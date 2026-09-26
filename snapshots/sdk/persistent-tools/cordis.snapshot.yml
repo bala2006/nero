@@ -1,0 +1,19 @@
+# Replay layer for the TypeScript SDK minimal customization patch.
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+
+- id: session-log-nero
+  config:
+    enabled: false

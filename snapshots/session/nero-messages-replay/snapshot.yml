@@ -1,0 +1,10 @@
+version: 1
+scenario: nero-messages-replay
+profile: headless
+composition: default
+recording: authored
+header:
+  class: nero-messages
+  pin: true
+  systemPromptSource: text-turn
+  toolSchemasSource: text-turn

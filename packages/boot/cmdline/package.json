@@ -1,0 +1,39 @@
+{
+  "name": "@nero/nero-cmdline",
+  "description": "Immutable command-line handoff from a nero launcher to any app plugin that injects cmdlineArgs",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/boot/cmdline"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "commander": "^15.0.0",
+    "@nero/cordis": "workspace:~"
+  }
+}

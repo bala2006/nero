@@ -1,0 +1,47 @@
+{
+  "name": "@nero/nero-repeat-tool-reminder",
+  "description": "Repeat-tool-call guard plugin: advisory reminders when an agent loops on identical tool calls",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/guard/repeat-tool-reminder"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-session-projection": "workspace:*"
+  }
+}

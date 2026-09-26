@@ -1,0 +1,3 @@
+- insert:
+    - id: auto-review
+      name: '@nero/nero-experimental-auto-review'

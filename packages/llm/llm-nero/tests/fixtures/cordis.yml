@@ -1,0 +1,21 @@
+- name: '@nero/nero-llm'
+- name: '@nero/nero-session'
+- name: '@nero/nero-session-projection'
+- name: '@nero/nero-system-prompt'
+- name: '@nero/nero-tools'
+- name: '@nero/nero-agent'
+- name: '@nero/nero-agent-loop'
+  config:
+    agents: []
+- name: '@nero/nero-credentials-local'
+  config:
+    path: {{credentials}}
+    watch: false
+- name: '@nero/nero-llm-nero'
+  config:
+    apiKeyEnv: NERO_API_KEY
+    baseURL: {{endpoint}}
+    thinking: enabled
+    reasoningEffort: high
+    maxTokens: 256000
+    streamIdleTimeoutMs: 300000

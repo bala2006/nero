@@ -1,0 +1,55 @@
+{
+  "name": "@nero/nero-session-stats",
+  "description": "Whole-log conversation counts and wall times projection (sessionStats) for the Nero Harness",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/session/session-stats"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./client": {
+      "types": "./lib/types/client.d.ts",
+      "default": "./lib/types/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "dependencies": {
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  }
+}

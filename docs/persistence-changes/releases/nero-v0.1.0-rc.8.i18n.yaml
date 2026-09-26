@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write docs/persistence-changes/releases/nero-v0.1.0-rc.8.md
+nero-v0.1.0-rc.8.md: a836cfa8a0ea7a324c895046ecc78a5471b401ed
+nero-v0.1.0-rc.8.zh.md: 4c0535cda27e0a2d9e6901abbea8cbe13b51f39e

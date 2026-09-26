@@ -1,0 +1,51 @@
+{
+  "name": "@nero/nero-file-reference-local",
+  "description": "Local-filesystem ctx.fileReferences provider with bounded fuzzy indexes",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/context/file-reference-local"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./search": {
+      "types": "./lib/types/search.d.ts",
+      "default": "./lib/types/search.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-file-reference": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-file-reference": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  }
+}

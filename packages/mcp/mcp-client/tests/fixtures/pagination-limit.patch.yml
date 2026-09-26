@@ -1,0 +1,11 @@
+- insert:
+    - id: mcp-pagination-limit
+      name: '@nero/nero-mcp-client'
+      config:
+        transport: stdio
+        serverName: pagination-limit
+        command: !!js process.execPath
+        args: !!js '[process.env.NERO_MCP_PAGINATION_FIXTURE]'
+        failOnStartupError: true
+        reconnect:
+          enabled: false

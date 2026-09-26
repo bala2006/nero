@@ -1,0 +1,152 @@
+{
+  "name": "@nero/nero-subagent",
+  "description": "Abstract subagent seam (ctx.subagents): named-provider registry for delegating to child agents",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/subagent/subagent"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./internal": {
+      "types": "./lib/types/internal.d.ts",
+      "default": "./lib/types/internal.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./client": {
+      "types": "./lib/types/client.d.ts",
+      "default": "./lib/types/client.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-chunked-list": "workspace:*",
+    "@nero/nero-util-values": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-preset-registry": "workspace:*",
+    "@nero/nero-attachment": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-jobs": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*",
+    "@nero/nero-scope": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-session-projection-cache": "workspace:*",
+    "@nero/nero-session-query": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/nero-user-approval": "workspace:*",
+    "@nero/nero-util-time": "workspace:*",
+    "@nero/nero-permission-presets": "workspace:*",
+    "@nero/nero-workspace": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nero/nero-agent-preset-registry": {
+      "optional": true
+    },
+    "@nero/nero-permission-presets": {
+      "optional": true
+    },
+    "@nero/nero-sandbox": {
+      "optional": true
+    },
+    "@nero/nero-sandbox-policy": {
+      "optional": true
+    },
+    "@nero/nero-session-persistence": {
+      "optional": true
+    },
+    "@nero/nero-session-projection": {
+      "optional": true
+    },
+    "@nero/nero-session-projection-cache": {
+      "optional": true
+    },
+    "@nero/nero-session-query": {
+      "optional": true
+    },
+    "@nero/nero-workspace": {
+      "optional": true
+    },
+    "@nero/nero-jobs": {
+      "optional": true
+    },
+    "@nero/nero-user-approval": {
+      "optional": true
+    },
+    "@nero/nero-settings": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-preset-registry": "workspace:*",
+    "@nero/nero-attachment": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-jobs": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*",
+    "@nero/nero-schedule": "workspace:*",
+    "@nero/nero-scope": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-session-projection-cache": "workspace:*",
+    "@nero/nero-session-query": "workspace:*",
+    "@nero/nero-storage": "workspace:*",
+    "@nero/nero-storage-domain": "workspace:*",
+    "@nero/nero-storage-json": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/nero-user-approval": "workspace:*",
+    "@nero/nero-util-time": "workspace:*",
+    "@nero/nero-permission-presets": "workspace:*",
+    "@nero/nero-workspace": "workspace:*"
+  }
+}

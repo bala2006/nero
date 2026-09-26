@@ -1,0 +1,95 @@
+{
+  "name": "@nero/nero-api-terminal-controller",
+  "description": "Session-owned interactive terminals with shell discovery, screen recovery and typed Remote control",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/api/terminal-controller"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "nero": {
+    "client": {
+      "inject": [
+        "@nero/nero-api-gateway"
+      ],
+      "external": [
+        "@nero/nero-api-gateway/client"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@nero/nero-deque": "workspace:*",
+    "@nero/nero-lazy-require": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "@xterm/headless": "^6.0.0",
+    "@xterm/addon-serialize": "^0.14.0",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "@nero/nero-subprocess": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-api-gateway": "workspace:*",
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-client-store": "workspace:*",
+    "@nero/nero-fs": "workspace:*",
+    "@nero/nero-remote-mock": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-subprocess": "workspace:*",
+    "@nero/nero-subprocess-local": "workspace:*",
+    "@nero/nero-util-crypto": "workspace:*"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ]
+}

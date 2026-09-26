@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-07-prebuilt-system-primitives.md
+2026-09-07-prebuilt-system-primitives.md: f4ffcc2aaab1a11014ceb65323660d8c1bf74d39
+2026-09-07-prebuilt-system-primitives.zh.md: 3c0d909a42dae8f614517e63b646ac6f4115d901

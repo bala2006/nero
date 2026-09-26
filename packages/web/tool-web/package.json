@@ -1,0 +1,59 @@
+{
+  "name": "@nero/nero-tool-web",
+  "description": "Model-facing web tools (web_search, web_fetch) over the Nero Harness web capability seam (ctx.web)",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/web/tool-web"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-web": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/nero-util-values": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "@joplin/turndown-plugin-gfm": "^1.0.67",
+    "turndown": "^7.2.4"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-spill-local": "workspace:*",
+    "@nero/nero-spill-policy": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tool-call-timeout-policy": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-web": "workspace:*",
+    "@nero/nero-web-fetch-http": "workspace:*",
+    "@nero/nero-web-search-exa": "workspace:*",
+    "@types/turndown": "^5.0.6",
+    "@nero/nero-scope": "workspace:*",
+    "@nero/nero-token-meter": "workspace:*"
+  }
+}

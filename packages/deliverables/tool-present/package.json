@@ -1,0 +1,60 @@
+{
+  "name": "@nero/nero-tool-present",
+  "description": "Explicit workspace file delivery declarations for the Nero Harness",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/deliverables/tool-present"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "license": "MIT",
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "dependencies": {
+    "@nero/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-fs": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-tools": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-fs": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-fs-local": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-scope": "workspace:*"
+  }
+}

@@ -1,0 +1,68 @@
+# TypeScript SDK snapshot patch for foreground and background NERO SDK failures.
+
+- id: skill-filesystem
+  name: '@nero/nero-skill-filesystem'
+  config:
+    includeDefaultRoots: false
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  config:
+    thinking: enabled
+    reasoningEffort: max
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: !!js "process.env.NERO_SNAPSHOT === undefined ? 'zstd' : 'none'"
+
+- id: session-log-nero
+  name: '@nero/nero-session-log-nero'
+  config:
+    enabled: true
+
+- insert:
+    - id: subagent-nero-sdk-diagnostic
+      name: '@nero/nero-subagent-nero-sdk'
+      config:
+        providerName: nero-sdk-diagnostic
+        profile: sdk
+        patches:
+          - !!js process.env.NERO_TEST_CHILD_PATCH
+        neroHome: !!js neroHomePath('children/foreground')
+        provider: mock
+        model: mock-echo
+        env:
+          NERO_TELEMETRY_DISABLED: '1'
+          NERO_TEST_CHILD_FAILURE: '1'
+    - id: tool-subagent-nero-sdk-diagnostic
+      name: '@nero/nero-tool-subagent'
+      config:
+        provider: nero-sdk-diagnostic
+        toolName: subagent_nero_sdk
+        backgroundMode: one-shot
+        maxDepth: provider-managed
+    - id: subagent-nero-sdk-diagnostic-background
+      name: '@nero/nero-subagent-nero-sdk'
+      config:
+        providerName: nero-sdk-diagnostic-background
+        profile: sdk
+        patches:
+          - !!js process.env.NERO_TEST_CHILD_PATCH
+        neroHome: !!js neroHomePath('children/background')
+        provider: mock
+        model: mock-echo
+        env:
+          NERO_TELEMETRY_DISABLED: '1'
+          NERO_TEST_CHILD_FAILURE: '1'
+          FAKE_INIT_GO: .nero-sdk-background-release
+    - id: tool-subagent-nero-sdk-diagnostic-background
+      name: '@nero/nero-tool-subagent'
+      config:
+        provider: nero-sdk-diagnostic-background
+        toolName: subagent_nero_sdk_background
+        backgroundMode: one-shot
+        maxDepth: provider-managed
+    - id: release-nero-sdk-background-on-job-output
+      name: '../../../apps/cli/tests/profiles/sdk/fixtures/subagent-nero-sdk-release-on-job-output.ts'

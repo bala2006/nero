@@ -1,0 +1,30 @@
+# Replay-backed goal patch over the shipped headless profile.
+- id: headless-startup
+  disabled: true
+
+- id: headless-runner
+  disabled: true
+
+- id: llm-nero
+  disabled: true
+
+- id: agent-loop
+  config:
+    agents:
+      - id: main
+        provider: nero-official
+        model: nero-v4-flash
+        cwd: !!js process.cwd()
+
+- id: session-persistence-jsonl
+  config:
+    root: './.sessions'
+    compression: none
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+
+- id: session-log-nero
+  config:
+    enabled: false

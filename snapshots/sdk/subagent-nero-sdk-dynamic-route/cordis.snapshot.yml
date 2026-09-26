@@ -1,0 +1,26 @@
+# Keyless replay layer for the NERO SDK dynamic-route snapshot.
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: mock-delegate
+          - id: mock
+            name: Mock
+            models:
+              - id: mock-routed
+                reasoningEfforts: [max]
+
+    - id: sdk-jsonrpc-server-dynamic-replay
+      name: '@nero/nero-sdk-jsonrpc-server'
+      inject: [sdkAppStartup, loader]
+      config:
+        maxTokensAsSuccess: true
+
+- id: session-log-nero
+  config:
+    enabled: false

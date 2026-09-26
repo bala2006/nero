@@ -1,0 +1,51 @@
+{
+  "name": "@nero/nero-sdk-app",
+  "description": "The nero SDK profile bundle: stdio JSON-RPC serving and process lifecycle over nero-base",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/bundle/sdk-app"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "cordis.patch.yml",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "nero": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  },
+  "dependencies": {
+    "@nero/nero-cmdline": "workspace:*",
+    "@nero/nero-sdk-jsonrpc-server": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "commander": "^15.0.0",
+    "@nero/nero-skill-office": "workspace:*",
+    "@nero/nero-tool-workspace-dependencies": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis": "workspace:~"
+  }
+}

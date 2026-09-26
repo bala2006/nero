@@ -1,0 +1,48 @@
+# Keyless replay for the `ralph` composition. The shared replay patch in
+# `text-turn/cordis.snapshot.yml` applies only to the `default` composition, so
+# a sibling composition restates those swaps and adds its own rows.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: plugin-package-inventory-nero
+  disabled: true
+
+- id: session-title-llm
+  disabled: true
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- id: sandbox
+  name: '@nero/nero-sandbox-local'
+  config:
+    runnerCommand:
+      - bash
+      - -c
+      - while [ "$1" != "--" ]; do shift; done; shift; exec "$@"
+      - passthrough-runner
+    runnerFailureSignatures:
+      - 'passthrough-runner: profile rejected'
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro
+          - id: nero-messages
+            name: Nero Messages
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro
+
+- id: tool-ralph
+  disabled: false

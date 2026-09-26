@@ -1,0 +1,168 @@
+# Per-launch SDK customization: retain only persistent Bash and the string
+# editor as model-facing tools, with process-local providers and an explicit
+# danger-full-access / never-ask policy.
+
+- insert:
+    - id: tool-str-replace-editor
+      name: '@nero/nero-tool-str-replace-editor'
+      config:
+        maxOutputChars: 16000
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  config:
+    apiKeyEnv: NERO_API_KEY
+    streamIdleTimeoutMs: 172800000
+    models:
+      - id: !!js process.env.NERO_MODEL ?? 'nero-v4-flash'
+        contextWindow: !!js Number(process.env.NERO_CONTEXT_WINDOW ?? 1000000)
+
+- id: sandbox-policy
+  name: '@nero/nero-sandbox-policy'
+  config:
+    mode: danger-full-access
+    workspaceRoot: !!js process.cwd()
+
+- id: approval
+  name: '@nero/nero-user-approval'
+  config:
+    policy: never
+
+- id: permission
+  name: '@nero/nero-permission-presets'
+  disabled: true
+
+- id: bash-sandbox
+  name: '@nero/nero-bash-sandbox'
+  disabled: true
+
+- id: pwsh-sandbox
+  name: '@nero/nero-pwsh-sandbox'
+  disabled: true
+
+- id: fs-sandbox
+  name: '@nero/nero-fs-sandbox'
+  disabled: true
+
+- id: tool-bash
+  name: '@nero/nero-tool-bash'
+  disabled: true
+
+- id: tool-pwsh
+  name: '@nero/nero-tool-pwsh'
+  disabled: true
+
+- id: agent-instructions
+  name: '@nero/nero-agent-instructions'
+  disabled: true
+
+- id: skill
+  name: '@nero/nero-skill'
+  disabled: true
+
+- id: skill-filesystem
+  name: '@nero/nero-skill-filesystem'
+  disabled: true
+
+- id: tool-skill
+  name: '@nero/nero-tool-skill'
+  disabled: true
+
+- id: tool-jobs
+  name: '@nero/nero-tool-jobs'
+  disabled: true
+
+- id: tool-fs
+  name: '@nero/nero-tool-fs'
+  disabled: true
+
+- id: tool-fs-search
+  name: '@nero/nero-tool-fs-search'
+  disabled: true
+
+- id: tool-subagent-control
+  name: '@nero/nero-tool-subagent-control'
+  disabled: true
+
+- id: tool-subagent-list-agents
+  name: '@nero/nero-tool-subagent-control/list-agents'
+  disabled: true
+
+- id: tool-subagent
+  name: '@nero/nero-tool-subagent'
+  disabled: true
+
+- id: tool-subagent-fork
+  name: '@nero/nero-tool-subagent'
+  disabled: true
+
+- id: tool-workflow
+  name: '@nero/nero-tool-workflow'
+  disabled: true
+
+- id: tool-todo
+  name: '@nero/nero-tool-todo'
+  disabled: true
+
+- id: tool-goal
+  name: '@nero/nero-tool-goal'
+  disabled: true
+
+- id: tool-ralph
+  name: '@nero/nero-tool-ralph'
+  disabled: true
+
+- id: tool-web
+  name: '@nero/nero-tool-web'
+  disabled: true
+
+- id: plan-mode
+  name: '@nero/nero-plan-mode'
+  disabled: true
+
+- id: system-prompt
+  name: '@nero/nero-system-prompt'
+  config:
+    includeHarnessIdentity: false
+    personaPrefix: !!js process.env.NERO_SYSTEM_PROMPT ?? 'You are a helpful software engineer assistant.'
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- insert:
+    - id: bash-local
+      name: '@nero/nero-bash-local'
+
+    - id: fs-local
+      name: '@nero/nero-fs-local'
+      config:
+        cwd: !!js process.cwd()
+
+    - id: terminal
+      name: '@nero/nero-terminal'
+
+    - id: terminal-bash
+      name: '@nero/nero-terminal-bash'
+      config:
+        timeoutMs: 300000
+
+    - id: persistent-bash
+      name: '@nero/nero-tool-bash-persistent'
+      config:
+        timeoutMs: 300000
+        description: |-
+          Run commands in a bash shell
+          * When invoking this tool, the contents of the "command" parameter does NOT need to be XML-escaped.
+          * You don't have access to the internet via this tool.
+          * You do have access to a mirror of common linux and python packages via apt and pip.
+          * State is persistent across command calls and discussions with the user.
+          * To inspect a particular line range of a file, e.g. lines 10-25, try 'sed -n 10,25p /path/to/the/file'.
+          * Please avoid commands that may produce a very large amount of output.
+          * Please run long lived commands in the background, e.g. 'sleep 10 &' or start a server in the background.
+
+- id: session-log-nero
+  config:
+    enabled: false

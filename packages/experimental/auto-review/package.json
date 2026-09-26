@@ -1,0 +1,80 @@
+{
+  "name": "@nero/nero-experimental-auto-review",
+  "description": "Per-tool LLM authorization review for the Nero Harness Auto permission preset",
+  "version": "0.1.7-alpha.2",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/experimental/auto-review"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./locale/*.json": "./locale/*.json",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "cordis.patch.yml",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-instructions": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-permission-presets": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "dependencies": {
+    "@nero/nero-util-values": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-instructions": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-bash-sandbox": "workspace:*",
+    "@nero/nero-compaction": "workspace:*",
+    "@nero/nero-fs-local": "workspace:*",
+    "@nero/nero-fs-observation-policy": "workspace:*",
+    "@nero/nero-fs-sandbox": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-llm-nero": "workspace:*",
+    "@nero/nero-permission-presets": "workspace:*",
+    "@nero/nero-ptc-runtime-node": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-shell": "workspace:*",
+    "@nero/nero-shell-env": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-subprocess-local": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tool-bash": "workspace:*",
+    "@nero/nero-tool-fs": "workspace:*",
+    "@nero/nero-tool-subagent": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-user-approval": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "nero": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    }
+  }
+}

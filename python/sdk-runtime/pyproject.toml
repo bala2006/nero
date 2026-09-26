@@ -1,0 +1,39 @@
+[build-system]
+requires = ["hatchling==1.30.1"]
+build-backend = "hatchling.build"
+
+[project]
+name = "nero-harness-runtime-bin"
+version = "0.0.0.dev0"
+description = "Bundled nero CLI runtime for the Nero Harness Python SDK"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "Nero" }]
+
+[project.urls]
+Homepage = "https://github.com/nero-ai/nero-harness"
+Documentation = "https://github.com/nero-ai/nero-harness/blob/master/python/sdk-runtime/README.md"
+Issues = "https://github.com/nero-ai/nero-harness/issues"
+Source = "https://github.com/nero-ai/nero-harness"
+
+[project.scripts]
+nero = "nero_harness_runtime:main"
+
+# Include the injected nero executable and sidecars; exclude the dev-only node closure.
+[tool.hatch.build]
+artifacts = [
+  "src/nero_harness_runtime/runtime/nero-harness-sdk-runtime-*",
+  "src/nero_harness_runtime/runtime/nero-harness-sdk-runtime-*/**",
+  "src/nero_harness_runtime/runtime/linux-*/**",
+  "src/nero_harness_runtime/runtime/macos-*/**",
+  "src/nero_harness_runtime/runtime/win-*/**",
+]
+exclude = ["src/nero_harness_runtime/runtime/node"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/nero_harness_runtime"]
+
+[tool.hatch.build.targets.wheel.hooks.custom]
+
+[tool.hatch.build.targets.sdist.hooks.custom]

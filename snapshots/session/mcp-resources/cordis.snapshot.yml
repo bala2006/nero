@@ -1,0 +1,28 @@
+- id: llm-nero
+  disabled: true
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+                contextWindow: 1000000
+                defaultMaxTokens: 256000
+                reasoningEfforts: [off, low, high, max]
+                defaultReasoningEffort: max
+
+- insert:
+    - id: mcp-resource-catalog
+      name: '@nero/nero-mcp-client'
+      config:
+        transport: stdio
+        serverName: catalog
+        command: !!js process.execPath
+        args: !!js '[process.env.NERO_MCP_RESOURCES_FIXTURE]'
+        failOnStartupError: true
+        reconnect:
+          enabled: false

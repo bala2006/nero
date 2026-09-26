@@ -1,0 +1,27 @@
+# Replay the authored model turns through the shipped OS sandbox.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: plugin-package-inventory-nero
+  disabled: true
+
+- id: session-title-llm
+  disabled: true
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro

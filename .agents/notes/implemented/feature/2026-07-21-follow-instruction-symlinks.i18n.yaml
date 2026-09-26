@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-07-21-follow-instruction-symlinks.md
+2026-07-21-follow-instruction-symlinks.md: b243c9df2c03607c9e07ba4e8637f06cf6d1c8be
+2026-07-21-follow-instruction-symlinks.zh.md: d14d59f53490623dccc805d2f3ca5495464cce9d

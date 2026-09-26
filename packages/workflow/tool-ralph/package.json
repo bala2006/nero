@@ -1,0 +1,58 @@
+{
+  "name": "@nero/nero-tool-ralph",
+  "description": "Model-facing fresh-agent Ralph loop over the workflow and subagent seams",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/workflow/tool-ralph"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-workflow": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "dependencies": {
+    "@nero/schemastery": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-subagent-in-process-driver": "workspace:*",
+    "@nero/nero-subagent-spawn-in-process": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-workflow": "workspace:*",
+    "@nero/nero-workflow-ptc": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-session-projection": "workspace:*"
+  }
+}

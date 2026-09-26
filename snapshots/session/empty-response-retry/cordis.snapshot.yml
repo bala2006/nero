@@ -1,0 +1,50 @@
+# Keyless replay for the retry overlay: disable the key-requiring Nero
+# adapter, insert `llm-replay`, and give its provider the same deterministic
+# 1 ms zero-jitter retry policy as the live sibling. The app patch still
+# restates its whole config for raw JSONL persistence and the recorded model.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: agent-default-model
+  name: '@nero/nero-agent-default-model'
+  config:
+    provider: nero-official
+    model: nero-v4-flash
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- id: agent-instructions
+  name: '@nero/nero-agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: system-prompt
+  name: '@nero/nero-system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}. Your bash tool runs under a file sandbox — a `[sandbox: file access denied …]` result is policy, not a command bug.
+
+      Verify your work by running the code or tests. Keep answers brief and factual.
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            retryPolicy:
+              mode: normal
+              maxRetries: 2
+              backoff:
+                initialDelayMs: 1
+                maxDelayMs: 1
+                jitterRatio: 0
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro

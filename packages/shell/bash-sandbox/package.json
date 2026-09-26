@@ -1,0 +1,47 @@
+{
+  "name": "@nero/nero-bash-sandbox",
+  "description": "Sandbox-consuming implementation of the Nero Harness bash executor seam (confines every command via ctx.sandbox, reports denial/enforcement result facts)",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/shell/bash-sandbox"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/nero-shell": "workspace:*",
+    "@nero/nero-bash-local": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/nero-shell": "workspace:*",
+    "@nero/nero-bash-local": "workspace:*",
+    "@nero/nero-subprocess-local": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-local": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/node-addon-system": "workspace:~",
+    "@nero/nero-session-projection": "workspace:*"
+  }
+}

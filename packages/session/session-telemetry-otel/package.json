@@ -1,0 +1,65 @@
+{
+  "name": "@nero/nero-session-telemetry-otel",
+  "description": "OpenTelemetry backend for the Nero Harness telemetry seam: hands captured session records to the OTel JS SDK's log pipeline",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/session/session-telemetry-otel"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@opentelemetry/api": "^1.9.1",
+    "@opentelemetry/api-logs": "^0.220.0",
+    "@opentelemetry/exporter-logs-otlp-http": "^0.220.0",
+    "@opentelemetry/otlp-exporter-base": "^0.220.0",
+    "@opentelemetry/resources": "^2.9.0",
+    "@opentelemetry/sdk-logs": "^0.220.0",
+    "@nero/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@nero/nero-command-feedback": "workspace:*",
+    "@nero/nero-message-feedback": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-telemetry": "workspace:*",
+    "@nero/nero-anonymous-user-id": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/cordis-plugin-logger-console": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-app-boot": "workspace:*",
+    "@nero/nero-bash-local": "workspace:*",
+    "@nero/nero-command-feedback": "workspace:*",
+    "@nero/nero-message-feedback": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-loader-smoke": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-checkpoint-policy": "workspace:*",
+    "@nero/nero-session-persistence-jsonl": "workspace:*",
+    "@nero/nero-session-telemetry": "workspace:*",
+    "@nero/nero-subprocess-local": "workspace:*",
+    "@nero/nero-anonymous-user-id": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-http-proxy": "workspace:*"
+  }
+}

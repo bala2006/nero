@@ -1,0 +1,31 @@
+# Keyless replay counterpart of system-prompt-in-history/cordis.yml: the
+# replay route declares the same in-history capability.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: agent-default-model
+  name: '@nero/nero-agent-default-model'
+  config:
+    provider: nero-official
+    model: nero-flash
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-flash
+                systemPromptUpdate: in-history
+                inputModalities: [text, image]
+    - id: in-history-prompt-update
+      name: '../../../packages/test-support/session-snapshot/tests/fixtures/in-history-prompt-update.ts'

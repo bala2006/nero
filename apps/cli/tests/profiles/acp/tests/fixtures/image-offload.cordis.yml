@@ -1,0 +1,44 @@
+# Keyless assembled-request snapshot for native Nero image offload. The
+# local provider endpoint is supplied by the snapshot test; the real attachment
+# store and ACP bridge carry two uploaded images into one model request.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  config:
+    apiKeyEnv: NERO_SNAPSHOT_API_KEY
+    baseURL: !!js process.env.NERO_SNAPSHOT_BASE_URL
+    thinking: disabled
+    maxRequestFilesBytes: 92
+    imageOffloadByteQuantum: 1
+    models:
+      - id: nero-v4-flash-vision-exp
+        contextWindow: 32768
+        maxTokens: 1024
+        inputModalities: [text, image]
+
+- id: acp
+  name: '@nero/nero-acp'
+  config:
+    provider: nero-official
+    model: nero-v4-flash-vision-exp
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js process.env.NERO_SNAPSHOT_SESSIONS_ROOT ?? './.sessions'
+    compression: none
+
+- id: agent-instructions
+  name: '@nero/nero-agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: system-prompt
+  name: '@nero/nero-system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+      Keep answers brief and factual.
+
+- id: attachment-local
+  name: '@nero/nero-attachment-local'

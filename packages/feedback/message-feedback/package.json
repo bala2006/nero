@@ -1,0 +1,71 @@
+{
+  "name": "@nero/nero-message-feedback",
+  "description": "Canonical Session-log ratings and notes for finalized assistant messages",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/feedback/message-feedback"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-command-feedback": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/schemastery": "workspace:~",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*",
+    "@nero/nero-session-persistence-jsonl": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-command-feedback": "workspace:*"
+  }
+}

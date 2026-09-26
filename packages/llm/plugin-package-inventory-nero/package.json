@@ -1,0 +1,63 @@
+{
+  "name": "@nero/nero-plugin-package-inventory-nero",
+  "description": "Active Loader-backed plugin package inventory for official Nero LLM API requests",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/llm/plugin-package-inventory-nero"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-preset-registry": "workspace:*",
+    "@nero/nero-nero-llm-api-extensions": "workspace:*",
+    "@nero/nero-session": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nero/nero-agent-preset-registry": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@nero/nero-app-boot": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-preset-registry": "workspace:*",
+    "@nero/nero-nero-llm-api-extensions": "workspace:*",
+    "@nero/nero-scope": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*"
+  }
+}

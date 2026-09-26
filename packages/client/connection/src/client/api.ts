@@ -1,0 +1,25 @@
+/** Browser-safe Connection protocol and shared application value exports. */
+
+export type {
+  ClientRequest,
+  RpcMessage,
+  RpcRequest,
+  RpcResponse,
+  RpcResult,
+  ServerResponse,
+} from '../rpc.ts'
+export { RpcId, transportError } from '../rpc.ts'
+export type { SessionId, SessionEvent } from '@nero/nero-session/types'
+export type { MessageId } from '@nero/nero-llm/brand'
+export type { ContentBlock, StreamChunk } from '@nero/nero-llm/types'
+
+import type { RpcResponse, RpcResult } from '../rpc.ts'
+
+/**
+ * Return the business result carried by an RPC response.
+ * @param response - RPC response to unwrap.
+ * @returns the response's business result.
+ */
+export function resultOf<T>(response: RpcResponse<T>): RpcResult<T> {
+  return response.result
+}

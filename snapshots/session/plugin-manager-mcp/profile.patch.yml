@@ -1,0 +1,9 @@
+- insert:
+    - id: demo
+      name: '@nero/nero-mcp-client'
+      disabled: true
+      config:
+        serverName: demo
+        transport: streamable-http
+        url: !!js process.env.NERO_MCP_DEMO_URL
+        failOnStartupError: true

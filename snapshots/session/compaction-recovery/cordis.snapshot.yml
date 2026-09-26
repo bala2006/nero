@@ -1,0 +1,29 @@
+# Keyless context-overflow replay composition.
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- id: compaction-basic
+  name: '@nero/nero-compaction-basic'
+  config:
+    thresholdRatio: 0.99
+    retainTokens: 20
+    maxTokens: 32
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+                contextWindow: 128000

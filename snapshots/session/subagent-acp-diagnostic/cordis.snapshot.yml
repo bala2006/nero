@@ -1,0 +1,40 @@
+# Keyless twin of subagent-acp-diagnostic.cordis.yml: keep the real ACP child
+# permission-denial path and replace only the external parent model adapter.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- insert:
+    - id: acp-diagnostic-release-on-job-output
+      name: './release-on-job-output.mjs'
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro
+    - id: subagent-acp-diagnostic
+      name: '@nero/nero-subagent-acp'
+      config:
+        providerName: acp-diagnostic
+        command: !!js process.execPath
+        args:
+          - !!js "decodeURIComponent(new URL('../../../packages/subagent/subagent-acp/tests/mock-acp-server.ts', 'file://' + process.env.NERO_SNAPSHOT_FILE).pathname)"
+        permission: reject
+        env:
+          MOCK_PERMISSION: '1'
+          MOCK_TOOL_KIND: execute
+          MOCK_PROMPT_HOLD: .nero/acp-diagnostic-prompt-hold
+    - id: tool-subagent-acp-diagnostic
+      name: '@nero/nero-tool-subagent'
+      config:
+        provider: acp-diagnostic
+        toolName: subagent_acp
+        backgroundMode: one-shot
+        maxDepth: provider-managed
+
+- id: plugin-package-inventory-nero
+  disabled: true

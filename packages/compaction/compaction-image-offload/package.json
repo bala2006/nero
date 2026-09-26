@@ -1,0 +1,57 @@
+{
+  "name": "@nero/nero-compaction-image-offload",
+  "description": "Durable image offload for image-capable routes: replace over-budget request images with placeholders and retry",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/compaction/compaction-image-offload"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json",
+    "./projection": {
+      "types": "./lib/types/projection.d.ts",
+      "default": "./lib/types/projection.js"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-compaction": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-attachment": "workspace:*",
+    "@nero/nero-compaction": "workspace:*",
+    "@nero/nero-compaction-basic": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-llm-nero": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-token-meter": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/nero-util-values": "workspace:*"
+  }
+}

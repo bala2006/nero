@@ -1,0 +1,31 @@
+# Keyless replay counterpart: deterministic HTTP remains real; only the model
+# adapter is replaced by replay.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro
+
+    - id: web-fetch-fixture
+      name: './web-fetch-fixture-server.mjs'
+
+- id: web
+  name: '@nero/nero-web'
+
+- id: web-fetch-http
+  name: '@nero/nero-web-fetch-http'
+  disabled: true
+
+- id: tool-web
+  name: '@nero/nero-tool-web'
+  config:
+    search: false

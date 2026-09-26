@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/testing/2026-08-03-opt-in-reasoning-chunk-browser-stress.md
+2026-08-03-opt-in-reasoning-chunk-browser-stress.md: 6d8e918f98438b40fab4bb43b85fe2d7a08c30fe
+2026-08-03-opt-in-reasoning-chunk-browser-stress.zh.md: 128bfe1fc51c22b7d5475b1c5bd3ec169d2c8f81

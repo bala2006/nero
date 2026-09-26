@@ -1,0 +1,27 @@
+{
+  "name": "@nero/nero-desktop-host",
+  "description": "Private Node-mode host process for the Electron desktop application",
+  "version": "0.1.7-alpha.2",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "main": "lib/index.js",
+  "files": [
+    "lib/index.js"
+  ],
+  "dependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero": "workspace:*",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-app-boot": "workspace:*",
+    "@nero/nero-browser-use": "workspace:*",
+    "@nero/nero-experimental-browser-use-playwright-mcp": "workspace:*",
+    "@nero/nero-client-connection": "workspace:*",
+    "@nero/nero-host-webserver": "workspace:*",
+    "@nero/nero-home-paths": "workspace:*",
+    "@nero/nero-jobs": "workspace:*",
+    "@nero/nero-tool-workspace-dependencies": "workspace:*",
+    "@nero/nero-skill-office": "workspace:*",
+    "@nero/nero-nero-account": "workspace:*"
+  }
+}

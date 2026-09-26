@@ -1,0 +1,83 @@
+{
+  "name": "@nero/nero-ssh",
+  "description": "Shared OpenSSH connection and versioned POSIX remote helper",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/ssh/ssh"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./helper": {
+      "types": "./lib/types/helper-entry.d.ts",
+      "default": "./lib/helper.js"
+    },
+    "./protocol": {
+      "types": "./lib/types/protocol.d.ts",
+      "default": "./lib/protocol.js"
+    },
+    "./schemas": {
+      "types": "./lib/types/schemas.d.ts",
+      "default": "./lib/schemas.js"
+    }
+  },
+  "files": [
+    "lib/index.js",
+    "lib/helper.js",
+    "lib/protocol.js",
+    "lib/schemas.js",
+    "lib/protocol-*.js",
+    "lib/schemas-*.js",
+    "lib/stream-security-*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-fs": "workspace:*",
+    "@nero/nero-fs-local": "workspace:*",
+    "@nero/nero-fs-sandbox": "workspace:*",
+    "@nero/nero-subprocess": "workspace:*",
+    "@nero/nero-subprocess-local": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-local": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-brand": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/schemastery": "workspace:~",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-fs": "workspace:*",
+    "@nero/nero-fs-local": "workspace:*",
+    "@nero/nero-fs-sandbox": "workspace:*",
+    "@nero/nero-subprocess": "workspace:*",
+    "@nero/nero-subprocess-local": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-local": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-ptc-runtime-node": "workspace:*",
+    "@nero/nero-fs-ssh": "workspace:*",
+    "@nero/nero-subprocess-ssh": "workspace:*",
+    "@nero/nero-sandbox-ssh": "workspace:*",
+    "@nero/nero-lsp": "workspace:*",
+    "@nero/nero-lsp-stdio": "workspace:*",
+    "@nero/nero-brand": "workspace:*"
+  }
+}

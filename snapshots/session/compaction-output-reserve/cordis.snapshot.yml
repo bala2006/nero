@@ -1,0 +1,32 @@
+# With 1,800 tokens of headroom, a 1,000-token output reservation lowers the
+# trigger from 8,240 to 7,500, between the history and its condensed replacement.
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- id: compaction-basic
+  name: '@nero/nero-compaction-basic'
+  config:
+    thresholdRatio: 0.8
+    headroomTokens: 1800
+    retainTokens: 20
+    maxTokens: 32
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+                contextWindow: 10300
+                defaultMaxTokens: 1000

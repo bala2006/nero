@@ -1,0 +1,67 @@
+{
+  "name": "@nero/nero-client-ui-jobs",
+  "description": "Session-header background-job list with on-demand streaming record panels",
+  "version": "0.1.7-alpha.2",
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/client/ui-jobs"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-api-job-controller": "workspace:*",
+    "@nero/nero-client-locale": "workspace:*",
+    "@nero/nero-client-test-runtime": "workspace:*",
+    "@nero/nero-client-ui-conversation": "workspace:*",
+    "@nero/nero-client-ui-primitives": "workspace:*",
+    "@nero/nero-client-ui-renderer": "workspace:*",
+    "@nero/nero-client-ui-session": "workspace:*",
+    "@nero/nero-client-ui-slots": "workspace:*",
+    "@nero/nero-jobs": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@types/react": "~18.3.1",
+    "react": "^18.2.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "nero": {
+    "client": {
+      "inject": [
+        "@nero/nero-api-job-controller",
+        "@nero/nero-client-locale",
+        "@nero/nero-client-ui-conversation",
+        "@nero/nero-client-ui-primitives"
+      ],
+      "platform": "web"
+    }
+  }
+}

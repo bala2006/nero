@@ -1,0 +1,86 @@
+{
+  "name": "@nero/nero-client-ui-workspace",
+  "description": "Workspace picker plugin: one WorkspacePicker registered into the sidebar and empty-state workspace slots",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/client/ui-workspace"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "nero": {
+    "client": {
+      "inject": [
+        "@nero/nero-api-remotes",
+        "@nero/nero-api-session-controller",
+        "@nero/nero-api-workspace-controller",
+        "@nero/nero-client-connection",
+        "@nero/nero-client-locale",
+        "@nero/nero-client-ui-conversation",
+        "@nero/nero-client-ui-layout",
+        "@nero/nero-client-ui-renderer",
+        "@nero/nero-client-ui-session",
+        "@nero/nero-client-ui-sidebar"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-api-remotes": "workspace:*",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-api-session-controller": "workspace:*",
+    "@nero/nero-api-workspace-controller": "workspace:*",
+    "@nero/nero-client-connection": "workspace:*",
+    "@nero/nero-client-locale": "workspace:*",
+    "@nero/nero-client-store": "workspace:*",
+    "@nero/nero-client-test-runtime": "workspace:*",
+    "@nero/nero-client-ui-conversation": "workspace:*",
+    "@nero/nero-client-ui-layout": "workspace:*",
+    "@nero/nero-client-ui-primitives": "workspace:*",
+    "@nero/nero-client-ui-renderer": "workspace:*",
+    "@nero/nero-client-ui-session": "workspace:*",
+    "@nero/nero-client-ui-sidebar": "workspace:*",
+    "@nero/nero-client-ui-slots": "workspace:*",
+    "@nero/nero-jobs": "workspace:*",
+    "@nero/nero-schedule": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/nero-util-values": "workspace:*",
+    "@nero/nero-util-workspace-path": "workspace:*",
+    "@types/react": "~18.3.1",
+    "clsx": "^2.0.0",
+    "react": "^18.2.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

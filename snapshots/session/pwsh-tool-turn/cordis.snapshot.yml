@@ -1,0 +1,85 @@
+# Minimal keyless composition: real app, pwsh executor, and pwsh tool; replayed model.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-pro
+
+- id: subprocess
+  name: '@nero/nero-subprocess-local'
+
+- id: bash-sandbox
+  name: '@nero/nero-bash-sandbox'
+  disabled: true
+
+- id: pwsh-sandbox
+  name: '@nero/nero-pwsh-sandbox'
+  disabled: false
+
+- id: shell-env
+  name: '@nero/nero-shell-env'
+
+- id: agent-default-model
+  name: '@nero/nero-agent-default-model'
+  config:
+    provider: nero-official
+    model: nero-v4-pro
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- id: agent-instructions
+  name: '@nero/nero-agent-instructions'
+  disabled: true
+
+- id: system-prompt
+  name: '@nero/nero-system-prompt'
+  config:
+    personaPrefix: You are a concise snapshot agent working in {{cwd}}.
+
+- id: goal
+  name: '@nero/nero-goal'
+  disabled: true
+
+- id: goal-round-driver
+  name: '@nero/nero-goal-round-driver'
+  disabled: true
+
+- id: command-goal
+  name: '@nero/nero-command-goal'
+  disabled: true
+
+- id: tool-goal
+  name: '@nero/nero-tool-goal'
+  disabled: true
+
+- id: skill
+  name: '@nero/nero-skill'
+  disabled: true
+
+- id: skill-filesystem
+  name: '@nero/nero-skill-filesystem'
+  disabled: true
+
+- id: tool-skill
+  name: '@nero/nero-tool-skill'
+  disabled: true
+
+- id: tool-bash
+  name: '@nero/nero-tool-bash'
+  disabled: true
+
+- id: tool-pwsh
+  name: '@nero/nero-tool-pwsh'
+  disabled: false

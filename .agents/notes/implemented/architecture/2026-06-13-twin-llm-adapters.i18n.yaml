@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-06-13-twin-llm-adapters.md
+2026-06-13-twin-llm-adapters.md: fa04d6b6132a6cee9a61b9b3064bb0be4e88c989
+2026-06-13-twin-llm-adapters.zh.md: 47f76d176e43027a8c7feba7b3bbc51be9e2f624

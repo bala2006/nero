@@ -1,0 +1,65 @@
+# SDK-profile patch for a deterministic parent model that selects a route for
+# a separate SDK child runtime. Both runtimes persist their request headers.
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: tool-subagent
+  name: '@nero/nero-tool-subagent'
+  disabled: true
+
+- id: sdk-jsonrpc-server
+  name: '@nero/nero-sdk-jsonrpc-server'
+  disabled: true
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- insert:
+    - id: mock-llm
+      name: '../../../packages/subagent/subagent-nero-sdk/tests/fixtures/loader/mock-delegating-llm.ts'
+      disabled: !!js process.env.NERO_SNAPSHOT !== 'record'
+
+    - id: subagent-nero-sdk
+      name: '@nero/nero-subagent-nero-sdk'
+      config:
+        profile: sdk
+        patches: !!js JSON.parse(process.env.NERO_TEST_CHILD_PATCHES ?? '[]')
+        neroHome: !!js process.env.NERO_TEST_CHILD_HOME
+        provider: mock
+        model: mock-routed
+        env:
+          NERO_TELEMETRY_DISABLED: '1'
+
+    - id: subagent-model-selection-settings
+      name: '@nero/nero-tool-subagent/model-selection-settings'
+      config:
+        enabled: true
+        allowedModels:
+          - provider: mock
+            model: mock-routed
+
+    - id: tool-subagent-nero-sdk
+      name: '../../../packages/subagent/subagent-nero-sdk/tests/fixtures/loader/scoped-tool-subagent.ts'
+      config:
+        provider: nero-sdk
+        toolName: subagent
+        enableRunInBackground: false
+        agentOptions:
+          maxTokens: 777
+        maxDepth: 'provider-managed'
+
+    - id: sdk-jsonrpc-server-dynamic-live
+      name: '@nero/nero-sdk-jsonrpc-server'
+      inject: [sdkAppStartup, loader]
+      disabled: !!js process.env.NERO_SNAPSHOT !== 'record'
+      config:
+        maxTokensAsSuccess: true
+
+- id: session-log-nero
+  config:
+    enabled: false

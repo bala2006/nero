@@ -1,0 +1,33 @@
+# Bounded-task admission overlay: keep the ordinary ACP composition while
+# configuring its task provider to allow one active task per exact owner. The
+# scenario starts a real background Bash process, observes the second producer
+# rejection, and cleans up the first task by its returned id.
+- id: agent-default-model
+  name: '@nero/nero-agent-default-model'
+  config:
+    provider: nero-official
+    model: nero-v4-flash
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: !!js 'process.env.NERO_SNAPSHOT === undefined ? ''zstd'' : ''none'''
+
+- id: agent-instructions
+  name: '@nero/nero-agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: system-prompt
+  name: '@nero/nero-system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}. Your bash tool runs under a file sandbox — a `[sandbox: file access denied …]` result is policy, not a command bug.
+
+      Verify your work by running the code or tests. Keep answers brief and factual.
+
+- id: jobs
+  name: '@nero/nero-jobs-local'
+  config:
+    maxConcurrentJobsPerOwner: 1

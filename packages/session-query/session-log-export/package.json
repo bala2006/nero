@@ -1,0 +1,83 @@
+{
+  "name": "@nero/nero-session-log-export",
+  "description": "Web Session-log export command and shared download dialog",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/session-query/session-log-export"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@nero/nero-session-format": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "fflate": "^0.8.2",
+    "@nero/nero-brand": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-attachment": "workspace:*",
+    "@nero/nero-client-connection": "workspace:*",
+    "@nero/nero-client-locale": "workspace:*",
+    "@nero/nero-client-store": "workspace:*",
+    "@nero/nero-client-ui-commands": "workspace:*",
+    "@nero/nero-client-ui-conversation": "workspace:*",
+    "@nero/nero-client-ui-message-feedback": "workspace:*",
+    "@nero/nero-client-ui-primitives": "workspace:*",
+    "@nero/nero-client-ui-renderer": "workspace:*",
+    "@nero/nero-client-ui-session": "workspace:*",
+    "@nero/nero-client-ui-slots": "workspace:*",
+    "@nero/nero-commands": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*",
+    "@nero/nero-session-query": "workspace:*",
+    "@types/react": "~18.3.1",
+    "react": "^18.2.0"
+  },
+  "nero": {
+    "client": {
+      "inject": [
+        "@nero/nero-client-locale",
+        "@nero/nero-client-ui-commands",
+        "@nero/nero-client-ui-conversation",
+        "@nero/nero-client-ui-renderer",
+        "@nero/nero-client-ui-session"
+      ],
+      "platform": "web"
+    }
+  }
+}

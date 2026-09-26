@@ -1,0 +1,31 @@
+# The summary output cap inherits the 1,800-token headroom. A 1,000-token
+# request output reservation lowers the proactive trigger to 7,500 tokens.
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- id: compaction-basic
+  name: '@nero/nero-compaction-basic'
+  config:
+    thresholdRatio: 0.8
+    headroomTokens: 1800
+    retainTokens: 20
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+                contextWindow: 10300
+                defaultMaxTokens: 1000

@@ -1,0 +1,39 @@
+# TypeScript SDK snapshot-record patch over `nero --profile sdk`.
+
+# The fixture corpus must not depend on the developer's personal skill roots.
+# Ordinary product launches retain the sdk profile's default skill discovery.
+- id: skill-filesystem
+  name: '@nero/nero-skill-filesystem'
+  config:
+    includeDefaultRoots: false
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  config:
+    thinking: enabled
+    reasoningEffort: max
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: !!js "process.env.NERO_SNAPSHOT === undefined ? 'zstd' : 'none'"
+
+- id: tool-subagent
+  name: '@nero/nero-tool-subagent'
+  config:
+    provider: spawn
+    toolName: subagent
+    backgroundMode: one-shot
+    enableRunInBackground: false
+    maxDepth: 1
+
+- insert:
+    - id: snapshot-message-feedback
+      name: '@nero/nero-message-feedback'
+      disabled: !!js "process.env.NERO_SNAPSHOT_FEEDBACK !== '1'"
+      config:
+        maxNoteBytes: 1024
+    - id: snapshot-feedback-producer
+      name: './feedback-producer.mjs'
+      disabled: !!js "process.env.NERO_SNAPSHOT_FEEDBACK !== '1'"

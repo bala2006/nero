@@ -1,0 +1,75 @@
+{
+  "name": "@nero/nero-tools",
+  "description": "Tool registry and execution pipeline for the Nero Harness",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/core/tools"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./presentation": {
+      "types": "./lib/types/presentation.d.ts",
+      "default": "./lib/types/presentation.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-ptc-runtime": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-scope": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-user-approval": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-util-values": "workspace:*",
+    "@nero/schemastery": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-ptc-runtime": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-scope": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-user-approval": "workspace:*",
+    "@nero/nero-sandbox": "workspace:*",
+    "@nero/nero-sandbox-policy": "workspace:*"
+  }
+}

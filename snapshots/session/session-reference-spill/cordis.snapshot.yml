@@ -1,0 +1,61 @@
+# Replay patch shared by the ordinary headless snapshot composition. The model
+# script comes from the scenario's committed session JSONL.
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: plugin-package-inventory-nero
+  disabled: true
+
+- id: session-title-llm
+  disabled: true
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- id: sandbox
+  name: '@nero/nero-sandbox-local'
+  config:
+    runnerCommand:
+      - bash
+      - -c
+      - while [ "$1" != "--" ]; do shift; done; shift; exec "$@"
+      - passthrough-runner
+    runnerFailureSignatures:
+      - 'passthrough-runner: profile rejected'
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro
+
+- id: spill-local
+  name: '@nero/nero-spill-local'
+  config:
+    root: !!js process.env.NERO_SNAPSHOT_SPILL_ROOT ?? './.spill'
+    cleanupPeriodDays: 0
+
+- insert:
+    - id: session-reference
+      name: '@nero/nero-session-reference'
+      config:
+        maxReferenceBytes: 360
+    - id: reference-source-fixture
+      name: ../../../packages/context/session-reference/tests/fixtures/source-session.ts
+
+- insert:
+    - id: snapshot-spill-locators
+      name: ../../../scripts/snapshot-spill-locators.ts
+      config:
+        root: !!js process.env.NERO_SNAPSHOT_SPILL_ROOT
+        locatorRoot: !!js process.env.NERO_SNAPSHOT_SPILL_LOCATOR_ROOT

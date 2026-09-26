@@ -1,0 +1,83 @@
+{
+  "name": "@nero/nero-client-ui-sidebar-browser",
+  "description": "Sandboxed Web browser tabs for the right Sidebar",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/client/ui-sidebar-browser"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts"
+    },
+    "./control": {
+      "types": "./lib/types/control.d.ts"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "nero": {
+    "client": {
+      "inject": [
+        "@nero/nero-api-workspace-controller",
+        "@nero/nero-client-ui-sidebar-right",
+        "@nero/nero-client-ui-session"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-scope": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-api-remotes": "workspace:*",
+    "@nero/nero-api-session-controller": "workspace:*",
+    "@nero/nero-api-workspace-controller": "workspace:*",
+    "@nero/nero-attachment": "workspace:*",
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-client-locale": "workspace:*",
+    "@nero/nero-client-store": "workspace:*",
+    "@nero/nero-client-ui-dockkit": "workspace:*",
+    "@nero/nero-client-ui-primitives": "workspace:*",
+    "@nero/nero-client-ui-renderer": "workspace:*",
+    "@nero/nero-client-ui-session": "workspace:*",
+    "@nero/nero-client-ui-sidebar-right": "workspace:*",
+    "@nero/nero-client-ui-slots": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@testing-library/react": "^16.1.0",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

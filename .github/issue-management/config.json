@@ -1,0 +1,19 @@
+{
+  "organization": "nero-harness",
+  "repository": "nero-harness",
+  "projectNumber": 1,
+  "projectTitle": "NERO Issue Management",
+  "lifecycleActor": "nero-issue-management",
+  "priorityField": "Priority",
+  "startDateField": "Start Date",
+  "projectTimeZone": "Asia/Shanghai",
+  "statuses": [
+    "Inbox",
+    "Backlog",
+    "Ready",
+    "In progress",
+    "In review",
+    "Done",
+    "No action"
+  ]
+}

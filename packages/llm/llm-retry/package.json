@@ -1,0 +1,72 @@
+{
+  "name": "@nero/nero-llm-retry",
+  "description": "Provider-routed LLM request retry policy for the Nero Harness",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/llm/llm-retry"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-timeout": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-session-projection": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/schemastery": "workspace:~",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-llm-nero": "workspace:*",
+    "@nero/nero-llm-mock-server": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-session-persistence-jsonl": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-timeout": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-session-projection": "workspace:*"
+  }
+}

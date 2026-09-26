@@ -1,0 +1,158 @@
+{
+  "name": "@nero/nero-api-session-controller",
+  "description": "Session Remote commands, cold reads, and live control transport",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/api/session-controller"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./remote-events": {
+      "types": "./lib/types/remote-events.d.ts",
+      "default": "./lib/types/remote-events.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "nero": {
+    "client": {
+      "external": [
+        "@nero/nero-api-gateway/client"
+      ],
+      "inject": [
+        "@nero/nero-api-gateway",
+        "@nero/nero-client-file-upload"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-deque": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "mime-types": "^3.0.2",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-default-model": "workspace:*",
+    "@nero/nero-agent-preset-registry": "workspace:*",
+    "@nero/nero-api-gateway": "workspace:*",
+    "@nero/nero-attachment": "workspace:*",
+    "@nero/nero-client-connection": "workspace:*",
+    "@nero/nero-client-file-upload": "workspace:*",
+    "@nero/nero-commands": "workspace:*",
+    "@nero/nero-file-reference": "workspace:*",
+    "@nero/nero-fs": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-native-command": "workspace:*",
+    "@nero/nero-scope": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-session-projection-cache": "workspace:*",
+    "@nero/nero-session-query": "workspace:*",
+    "@nero/nero-session-title": "workspace:*",
+    "@nero/nero-skill": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/nero-typert-registry": "workspace:*",
+    "@nero/nero-util-time": "workspace:*",
+    "@nero/nero-util-values": "workspace:*",
+    "@nero/nero-util-workspace-path": "workspace:*",
+    "@nero/nero-workspace": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nero/nero-session-persistence": {
+      "optional": true
+    },
+    "@nero/nero-session-projection-cache": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-default-model": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-agent-preset-registry": "workspace:*",
+    "@nero/nero-api-gateway": "workspace:*",
+    "@nero/nero-attachment": "workspace:*",
+    "@nero/nero-client-connection": "workspace:*",
+    "@nero/nero-client-file-upload": "workspace:*",
+    "@nero/nero-client-store": "workspace:*",
+    "@nero/nero-client-test-runtime": "workspace:*",
+    "@nero/nero-commands": "workspace:*",
+    "@nero/nero-file-reference": "workspace:*",
+    "@nero/nero-fs": "workspace:*",
+    "@nero/nero-fs-local": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-native-command": "workspace:*",
+    "@nero/nero-permission-presets": "workspace:*",
+    "@nero/nero-remote-mock": "workspace:*",
+    "@nero/nero-scope": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-session-projection-cache": "workspace:*",
+    "@nero/nero-session-query": "workspace:*",
+    "@nero/nero-session-title": "workspace:*",
+    "@nero/nero-skill": "workspace:*",
+    "@nero/nero-storage": "workspace:*",
+    "@nero/nero-storage-domain": "workspace:*",
+    "@nero/nero-storage-json": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/nero-typert-registry": "workspace:*",
+    "@nero/nero-util-crypto": "workspace:*",
+    "@nero/nero-util-time": "workspace:*",
+    "@nero/nero-util-values": "workspace:*",
+    "@nero/nero-util-workspace-path": "workspace:*",
+    "@nero/nero-workspace": "workspace:*",
+    "@types/mime-types": "^3.0.1"
+  }
+}

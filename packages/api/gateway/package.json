@@ -1,0 +1,80 @@
+{
+  "name": "@nero/nero-api-gateway",
+  "description": "Typert Remote Host dispatcher and Client API endpoint",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/api/gateway"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json",
+    "./stream-protocol": {
+      "types": "./lib/types/stream-protocol.d.ts",
+      "default": "./lib/types/stream-protocol.js"
+    }
+  },
+  "nero": {
+    "client": {
+      "inject": [
+        "@nero/nero-typert-registry",
+        "@nero/nero-client-connection"
+      ],
+      "platform": "web",
+      "immediately": true
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/nero-deque": "workspace:*",
+    "@nero/nero-timeout": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "ws": "^8.21.0",
+    "@nero/nero-typert-protocol": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-client-connection": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-cmdline": "workspace:*",
+    "@nero/nero-client-connection": "workspace:*",
+    "@nero/nero-host-webserver": "workspace:*",
+    "@nero/nero-remote-mock": "workspace:*",
+    "@nero/nero-typert-registry": "workspace:*",
+    "@nero/nero-util-crypto": "workspace:*",
+    "@types/ws": "^8.18.1",
+    "@nero/cordis": "workspace:~",
+    "zod": "^4.4.3"
+  }
+}

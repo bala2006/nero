@@ -1,0 +1,53 @@
+# Keyless replay counterpart of ptc-workspace-context.cordis.yml. It adds
+# PTC mode to the default filesystem suite and swaps in replay.
+- insert:
+    - id: literal-sdk
+      name: '../../../packages/core/tools/tests/fixtures/literal-sdk.ts'
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: plugin-package-inventory-nero
+  disabled: true
+
+- id: agent-default-model
+  name: '@nero/nero-agent-default-model'
+  config:
+    provider: nero-official
+    model: nero-v4-flash
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- id: agent-instructions
+  name: '@nero/nero-agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: tools
+  name: '@nero/nero-tools'
+  config:
+    mode: ptc
+
+- id: system-prompt
+  name: '@nero/nero-system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+      Verify your work by running the code or tests. Keep answers brief and factual.
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro

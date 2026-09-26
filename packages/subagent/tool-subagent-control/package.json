@@ -1,0 +1,61 @@
+{
+  "name": "@nero/nero-tool-subagent-control",
+  "description": "Globally named send_message, interrupt_agent, and list_agents tools over ctx.subagents continuations",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/subagent/tool-subagent-control"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./list-agents": {
+      "types": "./lib/types/list-agents.d.ts",
+      "default": "./lib/types/list-agents.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-tools": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*",
+    "@nero/nero-session-persistence-jsonl": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-session-query": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-subagent-fork-in-process": "workspace:*",
+    "@nero/nero-subagent-spawn-in-process": "workspace:*",
+    "@nero/nero-tools": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-util-values": "workspace:*"
+  }
+}

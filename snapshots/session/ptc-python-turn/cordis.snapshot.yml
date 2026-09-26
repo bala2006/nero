@@ -1,0 +1,61 @@
+# Keyless Python PTC composition through the real headless Loader.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- id: plugin-package-inventory-nero
+  disabled: true
+
+- id: agent-default-model
+  name: '@nero/nero-agent-default-model'
+  config:
+    provider: nero-official
+    model: nero-v4-flash
+
+- id: session-persistence-jsonl
+  name: '@nero/nero-session-persistence-jsonl'
+  config:
+    root: !!js neroHomePath('sessions')
+    compression: none
+
+- id: agent-instructions
+  name: '@nero/nero-agent-instructions'
+  config:
+    maxBytes: 65536
+
+- id: tools
+  name: '@nero/nero-tools'
+  config:
+    mode: ptc
+
+- id: ptc-runtime
+  disabled: true
+
+- id: workflow-ptc
+  disabled: true
+
+- id: tool-workflow
+  disabled: true
+
+- insert:
+    - id: ptc-runtime-python
+      name: '@nero/nero-experimental-ptc-runtime-python'
+
+- id: system-prompt
+  name: '@nero/nero-system-prompt'
+  config:
+    personaPrefix: |
+      You are a coding assistant powered by the {{model}} model. Your working directory is {{cwd}}.
+
+      Verify your work by running the code or tests. Keep answers brief and factual.
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro

@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-08-06-continuable-subagent-interrupt.md
+2026-08-06-continuable-subagent-interrupt.md: 7c9a8f3efcb42a2920b0018a313f30bc947fa4d9
+2026-08-06-continuable-subagent-interrupt.zh.md: ae7050508f1bf63a0b39e0c4b93c0481b40e18ee

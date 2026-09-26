@@ -1,0 +1,65 @@
+{
+  "name": "@nero/nero-llm-pi-ai",
+  "description": "pi-ai-backed Nero adapter for the Nero Harness LLM seam (design-verification twin of nero-llm-nero)",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/llm/llm-pi-ai"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-attachment": "workspace:*",
+    "@nero/nero-authorization": "workspace:*",
+    "@nero/nero-credentials": "workspace:*",
+    "@nero/nero-fs": "workspace:*",
+    "@nero/nero-launch-environment": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-timeout": "workspace:*",
+    "@nero/cordis-plugin-loader": "workspace:~"
+  },
+  "dependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-util-values": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "@earendil-works/pi-ai": "^0.85.1"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-attachment": "workspace:*",
+    "@nero/nero-authorization": "workspace:*",
+    "@nero/nero-credentials": "workspace:*",
+    "@nero/nero-fs": "workspace:*",
+    "@nero/nero-launch-environment": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-llm-nero": "workspace:*",
+    "@nero/nero-timeout": "workspace:*",
+    "@nero/nero-http-proxy": "workspace:*",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-settings": "workspace:*"
+  },
+  "peerDependenciesMeta": {
+    "@nero/cordis-plugin-loader": {
+      "optional": true
+    }
+  }
+}

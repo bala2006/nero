@@ -1,0 +1,26 @@
+# Keyless replay counterpart to pty.cordis.yml.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- insert:
+    - id: pty
+      name: '@nero/nero-terminal'
+    - id: pty-snapshot-backend
+      name: './pty-snapshot-backend.mjs'
+    - id: tool-terminal
+      name: '@nero/nero-tool-terminal'
+      config:
+        maxResultBytes: 64
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro
+
+- id: plugin-package-inventory-nero
+  disabled: true

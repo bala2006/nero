@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/proposed/simplification/2026-09-19-retire-app-bin-boot-helpers.md
+2026-09-19-retire-app-bin-boot-helpers.md: 008be36a6bae244ebdacc0b6ac7f66e1288d31ed
+2026-09-19-retire-app-bin-boot-helpers.zh.md: f924935545138a606e01f1cff6e32023f64b0201

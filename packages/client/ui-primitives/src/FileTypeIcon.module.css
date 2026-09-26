@@ -1,0 +1,50 @@
+.icon {
+  /* The design platform has no violet token matching the supplied image/video artwork. */
+  --nero-file-type-violet: rgb(139, 118, 246);
+
+  color: var(--nero-file-type-icon-color, var(--nero-file-type-default-color));
+}
+
+.code {
+  --nero-file-type-default-color: var(--dsw-static-nero-500);
+}
+
+.excel {
+  --nero-file-type-default-color: var(--dsw-static-green-500);
+}
+
+.folder {
+  --nero-file-type-default-color: var(--dsw-static-amber-400);
+}
+
+.html {
+  --nero-file-type-default-color: var(--dsw-static-nero-500);
+}
+
+.image {
+  --nero-file-type-default-color: var(--nero-file-type-violet);
+}
+
+.markdown {
+  --nero-file-type-default-color: var(--dsw-static-nero-500);
+}
+
+.other {
+  --nero-file-type-default-color: var(--dsw-static-neutral-bluish-300);
+}
+
+.pdf {
+  --nero-file-type-default-color: var(--dsw-static-red-600);
+}
+
+.ppt {
+  --nero-file-type-default-color: var(--dsw-static-amber-500);
+}
+
+.video {
+  --nero-file-type-default-color: var(--nero-file-type-violet);
+}
+
+.word {
+  --nero-file-type-default-color: var(--dsw-static-nero-450);
+}

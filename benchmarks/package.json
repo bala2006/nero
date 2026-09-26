@@ -1,0 +1,42 @@
+{
+  "name": "@nero/nero-benchmarks",
+  "version": "0.1.3-alpha.1",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "playwright": "^1.49.0",
+    "@xterm/headless": "^6.0.0",
+    "@nero/nero-terminal": "workspace:*",
+    "@nero/nero-subprocess": "workspace:*",
+    "@nero/nero-llm-replay": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-agent-preset-registry": "workspace:*",
+    "@nero/nero-api-session-controller": "workspace:*",
+    "@nero/nero-client-store": "workspace:*",
+    "@nero/nero-client-ui-chat": "workspace:*",
+    "@nero/nero-deque": "workspace:*",
+    "@nero/nero-lazy-require": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-sdk-client": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence": "workspace:*",
+    "@nero/nero-session-persistence-jsonl": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-session-query": "workspace:*",
+    "@nero/nero-session-stats": "workspace:*",
+    "@nero/nero-session-title": "workspace:*",
+    "@nero/nero-session-turn-outline": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-token-meter": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/nero-util-values": "workspace:*"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~"
+  }
+}

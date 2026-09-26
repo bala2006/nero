@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/proposed/simplification/2026-09-19-python-sdk-directional-client.md
+2026-09-19-python-sdk-directional-client.md: f14181627410437ecae08f93d025d0be2e2da1ff
+2026-09-19-python-sdk-directional-client.zh.md: e614c2c49ff8c18b11c435cbfdcccf7102f2b61a

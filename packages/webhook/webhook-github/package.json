@@ -1,0 +1,55 @@
+{
+  "name": "@nero/nero-webhook-github",
+  "description": "Signed GitHub HTTP webhook adapter for the Nero Harness webhook runtime",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/webhook/webhook-github"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-credentials": "workspace:*",
+    "@nero/nero-host-webserver": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-webhook": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/nero-util-values": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "@octokit/webhooks": "^14.2.0"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-credentials": "workspace:*",
+    "@nero/nero-host-webserver": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-webhook": "workspace:*"
+  }
+}

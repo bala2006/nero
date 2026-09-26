@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/feature/2026-09-08-shared-file-type-icons.md
+2026-09-08-shared-file-type-icons.md: 0b3bdd310238ced8e02eb3fc94929647314d7789
+2026-09-08-shared-file-type-icons.zh.md: 29f3c47f25f5dea4b74d371dae47feeac8f69f5a

@@ -1,0 +1,63 @@
+{
+  "name": "@nero/nero-app-boot",
+  "description": "Shared boot glue for the app bins: .env loading, fail-loud Loader guards, snapshot-aware config resolution, and the Loader boot sequence",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/boot/app-boot"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./worker/profile-resolution-bootstrap": {
+      "types": "./lib/types/profile-resolution/worker-bootstrap.d.ts",
+      "default": "./lib/worker/profile-resolution-bootstrap.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/worker/profile-resolution-bootstrap.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/nero-package-manifest": "workspace:*",
+    "@eslint-community/regexpp": "^4.12.2",
+    "ajv": "^8.20.0",
+    "js-yaml": "^4.2.0",
+    "node-addon-require-builtin": "^0.1.6",
+    "resolve.exports": "^2.0.3"
+  },
+  "peerDependencies": {
+    "@nero/cordis-plugin-group": "workspace:~",
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-launch-environment": "workspace:*",
+    "@nero/nero-home-paths": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/schemastery": "workspace:~",
+    "@nero/cordis-plugin-group": "workspace:~",
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/cordis-plugin-timer": "workspace:~",
+    "@nero/nero-launch-environment": "workspace:*",
+    "@nero/nero-home-paths": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@types/js-yaml": "^4.0.9",
+    "@nero/cordis": "workspace:~"
+  }
+}

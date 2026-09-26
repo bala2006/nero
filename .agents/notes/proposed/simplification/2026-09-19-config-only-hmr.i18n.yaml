@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/proposed/simplification/2026-09-19-config-only-hmr.md
+2026-09-19-config-only-hmr.md: 9a8c331255bd87badece93e470d8f53e33e6a477
+2026-09-19-config-only-hmr.zh.md: 9ad76e5d8a0a0a53cd4534245d22fbae8818b9f5

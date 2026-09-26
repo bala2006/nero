@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/bug-fix/2026-09-10-built-bundle-css-exemption.md
+2026-09-10-built-bundle-css-exemption.md: 4649894f057b1451376e0b6db34f89a2d642acd4
+2026-09-10-built-bundle-css-exemption.zh.md: 77a2eb6b992b33de54765af7e6559a2a9264321b

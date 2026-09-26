@@ -1,0 +1,96 @@
+{
+  "name": "@nero/nero-api-workspace-controller",
+  "description": "Workspace Remote commands and reconnect-safe state transport",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/api/workspace-controller"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./typert": {
+      "types": "./lib/typert.host.d.ts",
+      "default": "./lib/typert.host.js"
+    },
+    "./remote": {
+      "types": "./lib/typert.remote-client.d.ts",
+      "default": "./lib/typert.remote-client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "nero": {
+    "client": {
+      "external": [
+        "@nero/nero-api-gateway/client"
+      ],
+      "inject": [
+        "@nero/nero-api-gateway",
+        "@nero/nero-client-connection"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts",
+    "lib/typert.host.js",
+    "lib/typert.host.d.ts",
+    "lib/typert.remote-client.js",
+    "lib/typert.remote-client.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/nero-deque": "workspace:*",
+    "@nero/nero-native-command": "workspace:*",
+    "@nero/schemastery": "workspace:~",
+    "zod": "^4.4.3"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-api-gateway": "workspace:*",
+    "@nero/nero-client-connection": "workspace:*",
+    "@nero/nero-host-directory-picker": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-storage-domain": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/nero-workspace": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-api-gateway": "workspace:*",
+    "@nero/nero-client-connection": "workspace:*",
+    "@nero/nero-client-store": "workspace:*",
+    "@nero/nero-client-test-runtime": "workspace:*",
+    "@nero/nero-host-directory-picker": "workspace:*",
+    "@nero/nero-remote-mock": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-storage-domain": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/nero-workspace": "workspace:*"
+  }
+}

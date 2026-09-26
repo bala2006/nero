@@ -1,0 +1,25 @@
+# Keyless twin of subagent-result-diagnostic.cordis.yml: keep the same test
+# provider/tool and replace only the external model adapter.
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro
+    - id: subagent-result-diagnostic
+      name: '../../../packages/test-support/session-snapshot/tests/fixtures/subagent-result-diagnostic.ts'
+    - id: tool-subagent-codex
+      name: '@nero/nero-tool-subagent'
+      config:
+        provider: snapshot-diagnostic
+        toolName: subagent_codex
+        backgroundMode: one-shot
+        maxDepth: provider-managed
+
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true

@@ -1,0 +1,8 @@
+version: 1
+scenario: subagent-nero-sdk-diagnostic
+profile: sdk
+composition: sdk-nero-sdk-diagnostic
+recording: live
+header:
+  class: sdk-nero-sdk-diagnostic
+  pin: true

@@ -1,0 +1,5 @@
+- menu "模型与推理等级":
+  - group "Nero":
+    - text: Nero
+    - menuitemradio "Messages Flash" [checked]
+    - menuitemradio "Nero-V4-Pro"

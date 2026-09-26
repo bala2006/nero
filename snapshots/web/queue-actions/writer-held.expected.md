@@ -1,0 +1,7 @@
+- alert: This session is already in use, possibly by another running NERO instance (such as nero web or the desktop app). Quit other running NERO instances and try again.
+- textbox "Message or run a task, / commands, @ files or sessions":
+  - paragraph: Queue submission to retry
+- button "Add files or run commands"
+- 'button "Access mode, current: Workspace Write"': Workspace Write
+- button "Select model, current Nero-V4-Flash": Nero-V4-Flash
+- button "Queue message"

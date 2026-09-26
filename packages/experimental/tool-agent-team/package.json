@@ -1,0 +1,62 @@
+{
+  "name": "@nero/nero-experimental-tool-agent-team",
+  "description": "Scoped model-facing Agent Teams tools over ctx.agentTeams",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/experimental/tool-agent-team"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./locale/*.json": "./locale/*.json",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "locale/*.json",
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-experimental-agent-team": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*",
+    "@nero/nero-agent-loop-testkit": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-session-persistence-jsonl": "workspace:*",
+    "@nero/nero-session-query": "workspace:*",
+    "@nero/nero-scope": "workspace:*",
+    "@nero/nero-subagent": "workspace:*",
+    "@nero/nero-subagent-fork-in-process": "workspace:*",
+    "@nero/nero-subagent-spawn-in-process": "workspace:*",
+    "@nero/nero-tool-subagent-control": "workspace:*",
+    "@nero/nero-system-prompt": "workspace:*",
+    "@nero/nero-experimental-agent-team": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-llm-nero": "workspace:*"
+  }
+}

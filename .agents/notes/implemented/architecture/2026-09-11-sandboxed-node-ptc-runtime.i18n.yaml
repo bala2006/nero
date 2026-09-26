@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-09-11-sandboxed-node-ptc-runtime.md
+2026-09-11-sandboxed-node-ptc-runtime.md: c114af24d67a798012b863bf023570a388c59732
+2026-09-11-sandboxed-node-ptc-runtime.zh.md: 1908963e66ecda2eace67b9349e6744844a30e0b

@@ -1,0 +1,36 @@
+# Keyless replay keeps the LSP composition intact and replaces only the model adapter.
+- id: llm-nero
+  name: '@nero/nero-llm-nero'
+  disabled: true
+
+- insert:
+    - id: lsp
+      name: '@nero/nero-lsp'
+    - id: lsp-stdio
+      name: '@nero/nero-lsp-stdio'
+      config:
+        servers:
+          fixture:
+            command: !!js process.execPath
+            args: ['./lsp-server.mjs']
+            extensionToLanguage:
+              '.ts': typescript
+    - id: tool-lsp
+      name: '@nero/nero-tool-lsp'
+      config:
+        maxLocations: 1
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+              - id: nero-v4-pro
+
+- id: timeout-policy
+  name: '@nero/nero-tool-call-timeout-policy'
+
+- id: plugin-package-inventory-nero
+  disabled: true

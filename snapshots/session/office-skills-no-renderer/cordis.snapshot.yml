@@ -1,0 +1,22 @@
+- id: llm-nero
+  disabled: true
+
+- insert:
+    - id: llm-replay
+      name: '@nero/nero-llm-replay'
+      config:
+        providers:
+          - id: nero-official
+            name: Nero
+            models:
+              - id: nero-v4-flash
+                contextWindow: 1000000
+                defaultMaxTokens: 8192
+                reasoningEfforts: [off, low, high, max]
+                defaultReasoningEffort: high
+
+- insert:
+    - id: office-skills
+      name: '@nero/nero-skill-office'
+      config:
+        assetRoot: !!js process.cwd() + '/office-skills'

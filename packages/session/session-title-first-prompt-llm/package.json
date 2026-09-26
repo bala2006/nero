@@ -1,0 +1,47 @@
+{
+  "name": "@nero/nero-session-title-first-prompt-llm",
+  "description": "First-message LLM provider plugin for Nero Harness session titles",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/session/session-title-first-prompt-llm"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": ["lib/index.js", "lib/types/**/*.d.ts"],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-title": "workspace:*",
+    "@nero/nero-session-title-llm": "workspace:*",
+    "@nero/cordis": "workspace:~"
+  },
+  "dependencies": {
+    "@nero/schemastery": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-llm-nero": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-title": "workspace:*",
+    "@nero/nero-session-title-llm": "workspace:*",
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-session-projection": "workspace:*",
+    "@nero/nero-agent-loop": "workspace:*"
+  }
+}

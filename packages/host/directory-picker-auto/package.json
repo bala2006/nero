@@ -1,0 +1,52 @@
+{
+  "name": "@nero/nero-host-directory-picker-auto",
+  "description": "Adaptive chooser of the directory-picker seam: resolves the host situation at boot and mounts the native or browse backend for the Nero Harness web GUI host",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/host/directory-picker-auto"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-client-ui-directory-picker-browse": "workspace:*",
+    "@nero/nero-client-ui-directory-picker-native": "workspace:*",
+    "@nero/nero-host-directory-picker-browse": "workspace:*",
+    "@nero/nero-host-directory-picker-native": "workspace:*",
+    "@nero/nero-host-webserver": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-client-ui-directory-picker-browse": "workspace:*",
+    "@nero/nero-client-ui-directory-picker-native": "workspace:*",
+    "@nero/nero-host-directory-picker": "workspace:*",
+    "@nero/nero-host-directory-picker-browse": "workspace:*",
+    "@nero/nero-host-directory-picker-native": "workspace:*",
+    "@nero/nero-host-webserver": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/nero-launch-environment": "workspace:*"
+  }
+}

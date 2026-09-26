@@ -1,0 +1,69 @@
+{
+  "name": "@nero/nero-web-frontend",
+  "description": "Web application entry: vite build over the @nero/nero-client-web shell library; dist/ served by apps/cli's nero web",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "apps/web"
+  },
+  "type": "module",
+  "exports": {
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "!dist/preview.html",
+    "!dist/preview"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "watch": "vite build --watch --no-emptyOutDir",
+    "build:preview": "pnpm --filter @nero/nero-experimental-webworker-runtime exec tsdown && pnpm --filter @nero/nero-experimental-webworker-packer exec tsdown && vite build && nero-pack-vfs-image --out dist/preview/vfs-image.tar.gz",
+    "serve:preview": "http-server dist -a 0.0.0.0 -p 4173 -c-1"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "@nero/cordis-plugin-group": "workspace:~",
+    "@nero/nero-client-modules": "workspace:*",
+    "@nero/nero-client-store": "workspace:*",
+    "@nero/nero-client-test-runtime": "workspace:*",
+    "@nero/nero-client-ui-deliverables": "workspace:*",
+    "@nero/nero-client-ui-dockkit": "workspace:*",
+    "@nero/nero-client-ui-primitives": "workspace:*",
+    "@nero/nero-client-ui-slots": "workspace:*",
+    "@nero/nero-client-web": "workspace:*",
+    "@nero/nero-cmdline": "workspace:*",
+    "@nero/nero-pwsh-local": "workspace:*",
+    "@nero/nero-experimental-agent-team": "workspace:*",
+    "@nero/nero-experimental-webworker-packer": "workspace:*",
+    "@nero/nero-experimental-webworker-runtime": "workspace:*",
+    "@nero/nero-remote-mock": "workspace:*",
+    "@types/node": "^22.0.0",
+    "@types/react": "~18.3.1",
+    "@types/react-dom": "~18.3.0",
+    "@types/ws": "8.18.1",
+    "@vitejs/plugin-react": "^4.0.0",
+    "http-server": "^14.1.1",
+    "fflate": "^0.8.2",
+    "playwright": "^1.49.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "typescript": "^6.0.3",
+    "vite": "^6.0.0",
+    "vitest": "^4.1.8",
+    "ws": "8.21.0",
+    "@nero/nero-launch-environment": "workspace:*",
+    "@nero/nero-workspace-changes": "workspace:*",
+    "@nero/nero-subprocess-local": "workspace:*",
+    "@nero/nero-experimental-auto-review": "workspace:*",
+    "@nero/nero-experimental-speech-to-text": "workspace:*",
+    "@nero/nero-experimental-voice-input-bundle": "workspace:*"
+  }
+}

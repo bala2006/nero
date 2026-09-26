@@ -1,0 +1,64 @@
+{
+  "name": "@nero/nero-session-log-nero",
+  "description": "Incremental lossless session-log request extension for the official Nero LLM API",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/session/session-log-nero"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-util-values": "workspace:*",
+    "@nero/schemastery": "workspace:~"
+  },
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-nero-llm-api-extensions": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-session": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-command-feedback": "workspace:*",
+    "@nero/nero-nero-llm-api-extensions": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-llm-nero": "workspace:*",
+    "@nero/nero-llm-mock-server": "workspace:*",
+    "@nero/nero-message-feedback": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-persistence-jsonl": "workspace:*"
+  }
+}

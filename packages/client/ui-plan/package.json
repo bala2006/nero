@@ -1,0 +1,81 @@
+{
+  "name": "@nero/nero-client-ui-plan",
+  "description": "Plan mode controls, persistent transcript plan cards, and sidebar Markdown previews",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/client/ui-plan"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./client": {
+      "types": "./lib/types/client/index.d.ts",
+      "default": "./lib/client.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "nero": {
+    "client": {
+      "inject": [
+        "@nero/nero-api-remotes",
+        "@nero/nero-client-locale",
+        "@nero/nero-client-ui-conversation",
+        "@nero/nero-client-ui-sidebar-right",
+        "@nero/nero-client-ui-chat",
+        "@nero/nero-client-ui-user-questions",
+        "@nero/nero-client-resources",
+        "@nero/nero-api-session-controller"
+      ],
+      "platform": "web"
+    }
+  },
+  "scripts": {
+    "bundle": "tsdown",
+    "watch": "tsdown --watch"
+  },
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~"
+  },
+  "devDependencies": {
+    "@nero/nero-client-store": "workspace:*",
+    "@nero/nero-api-remotes": "workspace:*",
+    "@nero/nero-client-locale": "workspace:*",
+    "@nero/nero-client-test-runtime": "workspace:*",
+    "@nero/nero-client-ui-conversation": "workspace:*",
+    "@nero/nero-client-ui-primitives": "workspace:*",
+    "@nero/nero-client-ui-slots": "workspace:*",
+    "@nero/nero-plan-mode": "workspace:*",
+    "@types/react": "~18.3.1",
+    "@nero/cordis": "workspace:~",
+    "react": "^18.2.0",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-client-ui-renderer": "workspace:*",
+    "@nero/nero-client-ui-session": "workspace:*",
+    "@nero/nero-api-session-controller": "workspace:*",
+    "@nero/nero-client-ui-chat": "workspace:*",
+    "@nero/nero-client-ui-sidebar-right": "workspace:*",
+    "@nero/nero-client-ui-user-questions": "workspace:*",
+    "@nero/nero-client-resources": "workspace:*",
+    "@nero/nero-typert-protocol": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-tools": "workspace:*",
+    "@nero/nero-util-crypto": "workspace:*"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "lib/types/**/*.d.ts"
+  ]
+}

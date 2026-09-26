@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/implemented/architecture/2026-07-31-goal-owned-durable-events.md
+2026-07-31-goal-owned-durable-events.md: d817524ba5eed71a38f2c6389c83ad46bf63874b
+2026-07-31-goal-owned-durable-events.zh.md: 3d74afcefee4262ede4e10931c1ebb271f13c43d

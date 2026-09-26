@@ -1,0 +1,69 @@
+{
+  "name": "@nero/nero-webhook",
+  "description": "Fire-and-forget webhook rule runtime that creates Workspace-backed Nero Harness Sessions",
+  "version": "0.1.7-alpha.2",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nero-ai/nero-harness.git",
+    "directory": "packages/webhook/webhook"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "types": "lib/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./lib/types/index.d.ts",
+      "default": "./lib/index.js"
+    },
+    "./types": {
+      "types": "./lib/types/types.d.ts",
+      "default": "./lib/types/types.js"
+    },
+    "./invariant": {
+      "types": "./lib/types/invariant.d.ts",
+      "default": "./lib/invariant.js"
+    },
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/invariant.js",
+    "lib/types/**/*.js",
+    "lib/types/**/*.d.ts"
+  ],
+  "license": "MIT",
+  "peerDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-default-model": "workspace:*",
+    "@nero/nero-agent-preset-registry": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-permission-presets": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-title": "workspace:*",
+    "@nero/nero-workspace": "workspace:*"
+  },
+  "devDependencies": {
+    "@nero/cordis": "workspace:~",
+    "@nero/cordis-plugin-include": "workspace:~",
+    "@nero/cordis-plugin-loader": "workspace:~",
+    "@nero/nero-agent": "workspace:*",
+    "@nero/nero-agent-default-model": "workspace:*",
+    "@nero/nero-agent-preset-registry": "workspace:*",
+    "@nero/nero-invariants": "workspace:*",
+    "@nero/nero-llm": "workspace:*",
+    "@nero/nero-permission-presets": "workspace:*",
+    "@nero/nero-session": "workspace:*",
+    "@nero/nero-session-title": "workspace:*",
+    "@nero/nero-workspace": "workspace:*"
+  },
+  "dependencies": {
+    "@nero/nero-brand": "workspace:*",
+    "@nero/nero-util-values": "workspace:*"
+  }
+}

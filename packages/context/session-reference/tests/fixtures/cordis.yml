@@ -1,0 +1,17 @@
+- name: '@nero/nero-session'
+- name: '@nero/nero-system-prompt'
+- name: '@nero/nero-tools'
+- name: '@nero/nero-fs-local'
+- name: '@nero/nero-tool-fs'
+- name: '@nero/nero-session-query-sqlite'
+  config:
+    path: ':memory:'
+    openAt: never
+- name: '@nero/nero-session-reference'
+  config:
+    maxReferenceBytes: 360
+- name: './source-session.ts'
+- name: '@nero/nero-spill-local'
+  config:
+    root: '{{spillRoot}}'
+    cleanupPeriodDays: 0

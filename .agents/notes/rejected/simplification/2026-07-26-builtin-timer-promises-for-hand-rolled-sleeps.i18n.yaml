@@ -1,0 +1,6 @@
+# Bilingual-pair consistency record (docs/i18n/README.md): the git blob hash of each
+# side as of the last confirmed-consistent state. Both languages carry equal authority;
+# after editing either side, bring the other along and re-record with:
+#   pnpm run verify-translation-pairing --write .agents/notes/rejected/simplification/2026-07-26-builtin-timer-promises-for-hand-rolled-sleeps.md
+2026-07-26-builtin-timer-promises-for-hand-rolled-sleeps.md: 56a1a63173db4093ebccccf6dda48967e4784763
+2026-07-26-builtin-timer-promises-for-hand-rolled-sleeps.zh.md: 002cfcd67464fa4aa43b2aac1b09deee8761af88

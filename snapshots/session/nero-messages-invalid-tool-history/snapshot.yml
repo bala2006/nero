@@ -1,0 +1,10 @@
+version: 1
+scenario: nero-messages-invalid-tool-history
+profile: headless
+composition: nero-messages-invalid-tool-history
+recording: authored
+header:
+  class: nero-messages-invalid-tool-history
+  pin: true
+  systemPromptSource: text-turn
+  toolSchemasSource: text-turn
