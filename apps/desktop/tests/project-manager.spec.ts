@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { resolveDesktopPaths } from '../src/paths.ts'
-import { DesktopProjectManager } from '../src/project-manager.ts'
+import { AGENT_TEAM_BUNDLE, DESKTOP_BUNDLES, DesktopProjectManager } from '../src/project-manager.ts'
 import { readProfilePlugins } from '@nero/nero-app-boot'
 import { runtimeFixture } from './runtime-fixture.ts'
 
@@ -307,6 +307,54 @@ describe.each(['applyRelease', 'disableAllPlugins'] as const)('desktop profile l
     } finally {
       unlinkSync(manager.paths.lock)
     }
+  })
+})
+
+describe('desktop Agent Swarm default', () => {
+  function bundlesOf(manager: DesktopProjectManager): string[] {
+    return (JSON.parse(readFileSync(join(manager.paths.profile, 'package.json'), 'utf8')) as {
+      nero: { profile: { bundles: string[] } }
+    }).nero.profile.bundles
+  }
+  function setBundles(manager: DesktopProjectManager, bundles: readonly string[]): void {
+    const path = join(manager.paths.profile, 'package.json')
+    const manifest = JSON.parse(readFileSync(path, 'utf8')) as { nero?: { profile?: { bundles?: string[] } } }
+    manifest.nero ??= {}
+    manifest.nero.profile ??= {}
+    manifest.nero.profile.bundles = [...bundles]
+    writeFileSync(path, JSON.stringify(manifest))
+  }
+
+  it('enables Agent Swarm in a fresh profile and records the one-time upgrade', async () => {
+    const { manager } = setup()
+    await manager.applyRelease()
+    expect(DESKTOP_BUNDLES).toContain(AGENT_TEAM_BUNDLE)
+    expect(bundlesOf(manager)).toContain(AGENT_TEAM_BUNDLE)
+    expect(existsSync(join(manager.paths.profile, '.desktop-defaults-v1'))).toBe(true)
+  })
+
+  it('adds the default once to a profile that predates it, then leaves a later disable alone', async () => {
+    const { manager } = setup()
+    await manager.applyRelease()
+    const webOnly = DESKTOP_BUNDLES.filter(name => name !== AGENT_TEAM_BUNDLE)
+    // Simulate a Desktop profile written before Agent Swarm shipped as a default.
+    setBundles(manager, webOnly)
+    unlinkSync(join(manager.paths.profile, '.desktop-defaults-v1'))
+    await manager.applyRelease()
+    expect(bundlesOf(manager)).toContain(AGENT_TEAM_BUNDLE)
+    // The user then disables Agent Swarm through the plugin manager.
+    setBundles(manager, webOnly)
+    await manager.applyRelease()
+    expect(bundlesOf(manager)).not.toContain(AGENT_TEAM_BUNDLE)
+  })
+
+  it('keeps Agent Swarm in the shipped bundle list that safe-mode recovery restores', async () => {
+    const { manager } = setup()
+    await manager.applyRelease()
+    seedPlugin(manager)
+    await manager.disableAllPlugins()
+    expect(bundlesOf(manager)).toContain('@nero/nero-web-app')
+    expect(bundlesOf(manager)).toContain(AGENT_TEAM_BUNDLE)
   })
 })
 

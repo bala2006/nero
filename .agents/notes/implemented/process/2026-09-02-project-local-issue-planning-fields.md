@@ -24,7 +24,7 @@ The [organization-field implementation](../../archived/process/2026-08-31-pr-ope
 
 ## Verification
 
-[Issue-management tests](../../../../.github/issue-management/policy.test.mjs) require Project custom fields for Priority and Start Date, prove repository and Project reads use separate credentials, cover the Shanghai date boundary, opened-only dispatch, empty-value writes, existing-value preservation, and missing Project items, and pin `updateProjectV2ItemFieldValue`. Workflow tests pin the Project token's read-only permission. Removing an organization field requires comparing every legacy value with its Project value, including archived Project items.
+`.github/issue-management/policy.test.mjs` require Project custom fields for Priority and Start Date, prove repository and Project reads use separate credentials, cover the Shanghai date boundary, opened-only dispatch, empty-value writes, existing-value preservation, and missing Project items, and pin `updateProjectV2ItemFieldValue`. Workflow tests pin the Project token's read-only permission. Removing an organization field requires comparing every legacy value with its Project value, including archived Project items.
 
 ## Alternatives considered
 

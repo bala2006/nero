@@ -10,7 +10,7 @@ GitHub 可能用展开后的 `run-name` 填充工作流运行的 `name`。审批
 
 ## 决策
 
-[审批发布器](../../../../.github/review-ownership/check-approval.mjs) 按精确的 `workflow_run.path` 识别评审事件工作流。它还要求该运行由 `pull_request_review` 触发且成功完成，从 `display_title` 解析拉取请求编号，验证提供的拉取请求关联，并在计算审批结果前将拉取请求当前的头提交与已评审的头提交进行比较。
+`.github/review-ownership/check-approval.mjs` 按精确的 `workflow_run.path` 识别评审事件工作流。它还要求该运行由 `pull_request_review` 触发且成功完成，从 `display_title` 解析拉取请求编号，验证提供的拉取请求关联，并在计算审批结果前将拉取请求当前的头提交与已评审的头提交进行比较。
 
 ## 考虑过的替代方案
 
@@ -22,4 +22,4 @@ GitHub 可能用展开后的 `run-name` 填充工作流运行的 `name`。审批
 
 运行标题的展开不会阻止审批刷新，而非预期的工作流文件仍无法通过验证。移动评审事件工作流时，需要更新发布器预期的路径。
 
-[审批策略测试](../../../../.github/review-ownership/check-approval.test.mjs) 覆盖带编号的运行名称、无效的来源路径和事件、未成功的运行、无效标题以及已被替代的头提交。[审批结果策略](2026-09-09-blocked-weighted-approvals-remain-pending.zh.md) 继续负责待定与成功状态的语义。
+`.github/review-ownership/check-approval.test.mjs` 覆盖带编号的运行名称、无效的来源路径和事件、未成功的运行、无效标题以及已被替代的头提交。[审批结果策略](2026-09-09-blocked-weighted-approvals-remain-pending.zh.md) 继续负责待定与成功状态的语义。

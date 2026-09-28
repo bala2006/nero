@@ -2099,6 +2099,10 @@ Create one named, durable teammate. Only the Team Lead may call this tool.
         "fresh",
         "fork"
       ]
+    },
+    "job_role": {
+      "type": "string",
+      "description": "Human-assigned job role shown in the UI and announced to the teammate, such as software-developer, researcher, or qa-tester. Free text, at most 200 characters."
     }
   },
   "required": [

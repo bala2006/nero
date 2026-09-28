@@ -17,8 +17,13 @@
   /* The figma 525px cap held as a share of the width axis (525/748 ≈ 0.702):
      resolves to the original 525px on the default column and widens with a
      dragged or adaptive column. The 748px fallback covers mounts outside the
-     conversation column, where the axis variable is absent. */
-  max-width: min(calc(var(--nero-chat-content-width, 748px) * 0.702), 82%);
+     conversation column, where the axis variable is absent. A host narrower
+     than the column it is embedded in may take a larger share, so a prompt
+     that fits still reads as one block instead of wrapping early. */
+  max-width: min(
+    calc(var(--nero-chat-content-width, 748px) * var(--nero-chat-prompt-share, 0.702)),
+    var(--nero-chat-prompt-max-share, 82%)
+  );
 }
 .bubble {
   /* Figma's 525px cap held as a share of the width axis (525/748 ≈ 0.702) so

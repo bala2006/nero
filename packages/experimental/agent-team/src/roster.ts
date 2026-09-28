@@ -20,6 +20,7 @@ import type {
   SpawnTeammateResult,
   TeamMemberSnapshot,
   TeamMemberView,
+  UpdateTeamMemberRoleRequest,
 } from './types.ts'
 import { requiredText } from './validation.ts'
 
@@ -152,11 +153,47 @@ export class TeamRoster {
         description: member.description,
         provider: member.provider,
         context: member.context,
+        ...member.jobRole === undefined ? {} : { jobRole: member.jobRole },
         ...model === undefined ? {} : { model },
         diagnostics: member.error === undefined ? [] : [member.error],
       })
     }
     return result
+  }
+
+  /**
+   * Commit one durable teammate job-role edit requested on behalf of the user.
+   * @param caller - exact live Team member authorizing the edit (Lead authority).
+   * @param request - target name and the replacement job role.
+   * @param signal - cancellation for the edit operation.
+   * @returns the updated roster row.
+   */
+  async updateRole(caller: Agent, request: UpdateTeamMemberRoleRequest, signal: AbortSignal): Promise<TeamMemberView> {
+    const membership = this.membership(caller)
+    if (membership.role !== 'lead') {
+      throw new TeamError('only the Team Lead can edit teammate roles', 'TEAM_LEAD_REQUIRED')
+    }
+    const root = membership.root
+    const jobRole = requiredText(request.jobRole, 'jobRole', 200)
+    signal.throwIfAborted()
+    const target = resolveActiveMember(root, this.journal.state(root), request.target)
+    if (target.id === root.id) {
+      throw new TeamError('the Team Lead job role is fixed', 'TEAM_INVALID_TARGET')
+    }
+    const updated = await this.journal.transact(root.id, async (): Promise<TeamMemberSnapshot & { phase: 'active' }> => {
+      const current = this.journal.state(root).members.find(member => member.id === target.id)
+      if (current === undefined || current.phase !== 'active') {
+        throw new TeamError(`active teammate "${target.name}" not found`, 'TEAM_MEMBER_NOT_FOUND')
+      }
+      const next: TeamMemberSnapshot & { phase: 'active' } = { ...current, jobRole, phase: 'active' }
+      await this.journal.appendAndFlush(root, 'team/member', {
+        version: 2,
+        teamId: TeamId(root.id),
+        member: next,
+      })
+      return next
+    })
+    return this.memberView(updated)
   }
 
   /**
@@ -264,6 +301,7 @@ export class TeamRoster {
       provider: requiredText(request.provider, 'provider', 200),
       context: request.context,
       phase: 'provisioning',
+      ...request.jobRole === undefined ? {} : { jobRole: requiredText(request.jobRole, 'jobRole', 200) },
     }
 
     await this.journal.transact(root.id, async () => {
@@ -444,6 +482,7 @@ export class TeamRoster {
       description: member.description,
       provider: member.provider,
       context: member.context,
+      ...member.jobRole === undefined ? {} : { jobRole: member.jobRole },
       ...live?.options.model === undefined ? {} : { model: live.options.model },
       diagnostics: [],
     }

@@ -51,6 +51,8 @@ export interface TeamMemberSnapshot {
   readonly provider: string
   readonly context: 'fresh' | 'fork'
   readonly phase: TeamMemberPhase
+  /** Free-text job role shown in the UI and announced in the teammate prompt; edits are durable. */
+  readonly jobRole?: string
   readonly error?: string
 }
 
@@ -63,6 +65,7 @@ export interface TeamMemberView {
   readonly description?: string
   readonly provider?: string
   readonly context?: 'fresh' | 'fork'
+  readonly jobRole?: string
   readonly model?: string
   readonly diagnostics: string[]
 }
@@ -147,7 +150,20 @@ export interface SpawnTeammateRequest {
   readonly prompt: ContentBlock[]
   readonly context: 'fresh' | 'fork'
   readonly provider: string
+  readonly jobRole?: string
   readonly signal: AbortSignal
+}
+
+/** Input for one durable teammate job-role edit. */
+export interface UpdateTeamMemberRoleRequest {
+  readonly target: string
+  readonly jobRole: string
+}
+
+/** Serializable client request for one durable peer message. */
+export interface SendTeamMessageRemoteRequest {
+  readonly target: string
+  readonly content: ContentBlock[]
 }
 
 /** Result after one teammate reaches a durable active or failed edge. */

@@ -2,5 +2,5 @@
 # side as of the last confirmed-consistent state. Both languages carry equal authority;
 # after editing either side, bring the other along and re-record with:
 #   pnpm run verify-translation-pairing --write .agents/notes/implemented/process/2026-09-03-semantic-issue-templates-and-policy.md
-2026-09-03-semantic-issue-templates-and-policy.md: 96b1981b21e901841d88b09d68a0e7e31ca140a2
-2026-09-03-semantic-issue-templates-and-policy.zh.md: 706cd59047fe5121964183bbc27efc8961a493ed
+2026-09-03-semantic-issue-templates-and-policy.md: 89d2f2191458422ef1cdeec1e6fc1e513204213a
+2026-09-03-semantic-issue-templates-and-policy.zh.md: a2e9bb00e23a5322efb754408c15e75bf3455263

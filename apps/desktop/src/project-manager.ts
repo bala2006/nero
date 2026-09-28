@@ -23,13 +23,31 @@ import type { DesktopPaths } from './paths.ts'
 import type { DesktopRelease } from './release.ts'
 import { readDesktopRuntime } from './runtime-tree.ts'
 import {
-  initProfile, PROFILE_TEMPLATES, removeLinkProjections, sanitizeProfile, type ProfileTemplate,
+  initProfile, PROFILE_TEMPLATES, readProfileManifest, removeLinkProjections, sanitizeProfile,
+  writeProfileBundles, type ProfileTemplate,
 } from '@nero/nero-app-boot'
 
 const PROJECT_NAME = '@nero/nero-desktop-runtime'
 const NERO_PACKAGE = '@nero/nero'
 const CORE_BUILD_PACKAGE = '@nero/nero-subprocess-local'
-const WEB_PROFILE = PROFILE_TEMPLATES.web as ProfileTemplate
+
+/** The Agent Swarm bundle the Desktop profile enables by default. */
+export const AGENT_TEAM_BUNDLE = '@nero/nero-experimental-agent-team-profile'
+
+/**
+ * The Desktop profile's shipped bundle layers: the Web template plus the
+ * Agent Swarm extension, so a fresh Desktop install coordinates agents out of
+ * the box. The plugin manager still offers the Settings toggle that removes it.
+ */
+export const DESKTOP_BUNDLES: readonly string[] = [
+  ...(PROFILE_TEMPLATES.web as ProfileTemplate).bundles,
+  AGENT_TEAM_BUNDLE,
+]
+
+const DESKTOP_PROFILE = { bundles: DESKTOP_BUNDLES } satisfies ProfileTemplate
+
+/** Marks the one-time upgrade of profiles predating the Agent Swarm default. */
+const DESKTOP_DEFAULTS_MARKER = '.desktop-defaults-v1'
 const WORKSPACE_SETTINGS = 'nodeLinker: hoisted\nautoInstallPeers: false\n'
 function writeJson(path: string, value: unknown): void {
   writeFileSync(path, `${JSON.stringify(value, undefined, 2)}\n`, { mode: 0o600 })
@@ -74,7 +92,7 @@ export class DesktopProjectManager {
    * @returns Backup path after the locked profile write, or undefined if the patch was absent.
    */
   async disableAllPlugins(): Promise<string | undefined> {
-    return this.withLock(() => sanitizeProfile('nero', this.paths.profile, WEB_PROFILE.bundles))
+    return this.withLock(() => sanitizeProfile('nero', this.paths.profile, DESKTOP_BUNDLES))
   }
 
   /**
@@ -139,7 +157,7 @@ export function createRuntimeProjectMetadata(projectDir: string, release: Deskto
     private: true,
     version: '0.0.0',
     dependencies: desktopCorePackageOverrides(packageSet),
-    nero: { profile: { bundles: [...WEB_PROFILE.bundles] } },
+    nero: { profile: { bundles: [...DESKTOP_BUNDLES] } },
   }
   writeJson(join(projectDir, 'package.json'), manifest)
   writeFileSync(
@@ -164,7 +182,7 @@ export function createDevelopmentProjectMetadata(projectDir: string, release: De
       [NERO_PACKAGE]: release.version,
       [DESKTOP_HOST_PACKAGE]: release.version,
     },
-    nero: { profile: { bundles: [...WEB_PROFILE.bundles] } },
+    nero: { profile: { bundles: [...DESKTOP_BUNDLES] } },
   }
   writeJson(join(projectDir, 'package.json'), manifest)
   writeFileSync(join(projectDir, 'pnpm-workspace.yaml'), workspaceFile(), { mode: 0o600 })
@@ -172,5 +190,24 @@ export function createDevelopmentProjectMetadata(projectDir: string, release: De
 
 /** Create the first external plugin profile without running a package manager. */
 export function createPluginProfile(projectDir: string): void {
-  initProfile(projectDir, WEB_PROFILE.bundles)
+  initProfile(projectDir, DESKTOP_PROFILE.bundles)
+  enableAgentTeamDefault(projectDir)
+}
+
+/**
+ * Enable the Agent Swarm bundle once on a profile that predates the Desktop
+ * default, then leave the bundle list to its owner. A user who disables the
+ * bundle through the plugin manager keeps it disabled: the marker records that
+ * this profile already received the default.
+ * @param projectDir - the Desktop profile directory.
+ */
+function enableAgentTeamDefault(projectDir: string): void {
+  const marker = join(projectDir, DESKTOP_DEFAULTS_MARKER)
+  if (existsSync(marker)) return
+  const manifest = readProfileManifest('nero', projectDir)
+  const bundles = manifest.nero?.profile?.bundles ?? []
+  if (!bundles.includes(AGENT_TEAM_BUNDLE)) {
+    writeProfileBundles(projectDir, manifest, [...bundles, AGENT_TEAM_BUNDLE])
+  }
+  writeFileSync(marker, `${Date.now()}\n`, { mode: 0o600 })
 }

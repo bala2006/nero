@@ -10,7 +10,7 @@ Status: implemented
 
 ## Decision
 
-[审批策略](../../../../.github/review-ownership/README.md)为作者在本仓库中每个已合并 PR 计入 0.011 分，达到 100 个 PR 时以 1.1 分封顶。历史查询在找到 100 个匹配 PR 后停止。仅靠作者积分仍不足以通过审批，阻塞性审阅仍会阻止通过。
+`.github/review-ownership/README.md`为作者在本仓库中每个已合并 PR 计入 0.011 分，达到 100 个 PR 时以 1.1 分封顶。历史查询在找到 100 个匹配 PR 后停止。仅靠作者积分仍不足以通过审批，阻塞性审阅仍会阻止通过。
 
 ## Alternatives considered
 

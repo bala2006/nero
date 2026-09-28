@@ -1,0 +1,721 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 4px 10px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+.count {
+  min-width: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--dsw-alias-fill-l2);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.meta {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+/* Canvas zoom: a step down, the current factor (click returns home), a step up. */
+.zoom {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 2px;
+  padding: 1px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 7px;
+}
+
+.zoomButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
+
+.zoomButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.zoomValue {
+  min-width: 38px;
+  height: 20px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+
+.zoomValue:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+  color: var(--dsw-alias-label-primary);
+}
+
+.iconButton {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: var(--dsw-alias-interactive-bg-hover);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 10px;
+  overflow: hidden;
+  --nero-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --nero-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+}
+
+/* The hierarchy is centered in the room the panel gives it, so opening the
+   canvas shows the whole Team in the middle instead of in the top-left corner;
+   panning stays a transform on the centered graph, so the double-click origin
+   is that centered home position. */
+.canvas {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  min-height: 0;
+  padding: 12px;
+  overflow: hidden;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 10px;
+  background-color: #000;
+  background-image: radial-gradient(circle, rgb(255 255 255 / 22%) 1px, transparent 1px);
+  background-size: 16px 16px;
+  cursor: grab;
+  touch-action: none;
+  /* Panning drags the ground; it must not paint a text selection over the
+     node labels on the way. The mini window restores selection below. */
+  user-select: none;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+.graph {
+  position: relative;
+  flex: none;
+}
+
+.edges {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.edge {
+  fill: none;
+  stroke: rgb(255 255 255 / 55%);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+/* One agent card: an identity row over six metric tiles. The shell carries the
+   canvas position at half the card's design size, and the scaler draws the
+   whole card — avatar, type, tiles, and menu — at exactly half scale, so every
+   proportion inside it is preserved. */
+.nodeShell {
+  position: absolute;
+}
+
+.nodeScaler {
+  position: relative;
+  width: 360px;
+  height: 140px;
+  zoom: 0.5;
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  padding: 12px;
+  border: 0.5px solid rgb(255 255 255 / 14%);
+  border-radius: 14px;
+  background: linear-gradient(180deg, #191a1e, #101114);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 16px 36px rgb(0 0 0 / 55%);
+}
+
+.node:hover {
+  border-color: rgb(255 255 255 / 26%);
+}
+
+/* The link anchors: one ring per edge endpoint, matching where an edge lands. */
+.node::before,
+.node::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 60%);
+  box-shadow: inset 0 0 0 2.5px #101114;
+}
+
+.node::before {
+  top: -5px;
+}
+
+.node::after {
+  bottom: -5px;
+}
+
+.nodeSelected {
+  border-color: var(--dsw-alias-brand-primary);
+}
+
+.nodeMenu {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  cursor: pointer;
+}
+
+.nodeMenu:hover,
+.nodeMenu[aria-expanded='true'] {
+  background: rgb(255 255 255 / 10%);
+  color: var(--dsw-alias-label-primary);
+}
+
+.nodeHead {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  /* Room for the card's menu in the corner above. */
+  padding-right: 22px;
+}
+
+.nodeAvatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: 50%;
+  background: rgb(255 255 255 / 5%);
+  color: var(--dsw-alias-label-secondary);
+}
+
+.nodeAvatarLead {
+  border-color: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-brand-primary);
+}
+
+.nodeTitle {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.nodeName {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeRole {
+  overflow: hidden;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nodeStatus {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 5px;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+}
+
+.nodeTiles {
+  display: grid;
+  flex: 1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  min-height: 0;
+}
+
+.tile {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 0 6px;
+  border: 0.5px solid rgb(255 255 255 / 8%);
+  border-radius: 8px;
+  background: rgb(255 255 255 / 4%);
+  color: var(--dsw-alias-label-primary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.tileIcon {
+  display: inline-flex;
+  flex: none;
+}
+
+.tileValue {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* One accent per figure, so a glance picks out the tile it needs. */
+.toneContext {
+  color: var(--dsw-alias-state-warn-primary);
+}
+
+.toneTokens {
+  color: var(--dsw-alias-state-business-primary);
+}
+
+.toneSpeed {
+  color: var(--dsw-alias-brand-primary);
+}
+
+.toneModel {
+  color: var(--dsw-alias-label-secondary);
+}
+
+.toneCache {
+  color: var(--dsw-alias-state-success-primary);
+}
+
+.toneTodos {
+  color: var(--dsw-alias-brand-primary);
+}
+
+/* The host spans the canvas so the card's height AND width constraints have a
+   definite box to resolve against — a canvas narrower than the default width
+   clamps the card instead of clipping its left side out of reach. Only the
+   card itself takes pointers, leaving the graph under it clickable and
+   draggable. */
+.miniHost {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  left: 12px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+
+/* One window size for every tab: the card fills the room the host leaves, so
+   switching between Edit Agent, Chat, and Trajectory never resizes it. It is
+   anchored to the canvas's bottom-right corner, so its width is room taken
+   from the left, and the default is wide enough that the embedded composer
+   keeps its expanded model control instead of collapsing to the icon. */
+.card {
+  position: relative;
+  display: flex;
+  user-select: text;
+  flex-direction: column;
+  gap: 8px;
+  box-sizing: border-box;
+  width: 520px;
+  height: 100%;
+  min-width: 280px;
+  min-height: 220px;
+  max-width: 100%;
+  max-height: 100%;
+  padding: 10px;
+  pointer-events: auto;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 12px;
+  background: var(--dsw-specific-menu);
+  backdrop-filter: var(--dsw-menu-backdrop-filter);
+  --dsw-elevation-stroke-color: var(--dsw-alias-border-l1);
+  box-shadow: var(--dsw-elevation-prominent);
+
+}
+
+/* Corner grip: the window is anchored to the canvas's bottom-right corner, so
+   dragging up and left grows it and the opposite drag shrinks it to WINDOW_MIN. */
+.grip {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-tertiary);
+  cursor: nwse-resize;
+  touch-action: none;
+}
+
+.grip::after {
+  content: '';
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 9px;
+  height: 9px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  border-bottom-right-radius: 3px;
+  opacity: 0.7;
+}
+
+.grip:hover {
+  color: var(--dsw-alias-label-secondary);
+}
+
+.cardHead {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding-bottom: 8px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+.avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--dsw-alias-fill-l2);
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+}
+
+.cardTitle {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cardName {
+  overflow: hidden;
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cardMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+}
+
+.tabStrip {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+.tab {
+  padding: 6px 0;
+  border: 0;
+  border-bottom: 1.5px solid transparent;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tabActive {
+  border-bottom-color: var(--dsw-alias-brand-primary);
+  color: var(--dsw-alias-label-primary);
+  font-weight: 600;
+}
+
+/* `flex-basis: auto` so the card's fixed height is taken out of THIS seat
+   rather than the chrome around it; the tab body is the only row that yields. */
+.tabBody {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow: auto;
+  --nero-scrollbar-thumb: var(--dsw-alias-scrollbar-bg-l2);
+  --nero-scrollbar-thumb-hover: var(--dsw-alias-scrollbar-hover-l2);
+}
+
+/* An embedded Conversation scrolls itself, so the card clips instead of
+   stacking a second scrollbar around the transcript. Its own composer, to-do
+   row, and usage metadata stay mounted inside the window: the mini chat sends
+   through the same composer the full conversation uses. */
+.tabBodyEmbedded {
+  overflow: hidden;
+
+  /* The window is a fraction of a conversation column, so its whole
+     Conversation — transcript, To-dos row, composer, and usage metadata —
+     renders scaled down together instead of only its font sizes following the
+     content axis. `zoom` scales layout as well as paint, which is what the
+     composer's own container queries and the transcript's scroll geometry
+     need; an engine without it falls back to full size rather than breaking
+     the box model. */
+  zoom: 0.8;
+
+  /* The window's transcript column fills nearly its whole row, so the empty
+     band beside a right-aligned prompt is room the prompt itself can use: the
+     share rises from the figma 70.2% of the content axis to 93.5%, which spends
+     about half of the band the window left beside a prompt (measured in the
+     running window: a 178px band becomes 94px, and the 92% narrow-window guard
+     spends proportionally the same when the row is narrower than the axis). */
+  --nero-chat-prompt-share: 0.935;
+  --nero-chat-prompt-max-share: 92%;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.fieldLabel {
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.fieldHelp {
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+}
+
+.idRow,
+.stepsHead {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* A role's proposed system prompt waiting on the user's answer. */
+.roleOffer {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: var(--dsw-alias-fill-l2);
+}
+
+.offerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.select {
+  width: 100%;
+  padding: 6px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+}
+
+.textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 7px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+  resize: vertical;
+}
+
+.addStep {
+  padding: 4px 9px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+}
+
+.stepCheck {
+  flex: none;
+  accent-color: var(--dsw-alias-brand-primary);
+}
+
+.stepText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stepDone {
+  color: var(--dsw-alias-label-tertiary);
+  text-decoration: line-through;
+}
+
+.roleInput {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 8px;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+}
+
+.iconButton:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.cardFoot {
+  flex: none;
+  padding-right: 16px;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+}
+
+.link {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 11px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.diagnostic,
+.error,
+.warning {
+  color: var(--dsw-alias-state-error-primary);
+}
+
+.notice,
+.error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px;
+  font-size: 12px;
+}

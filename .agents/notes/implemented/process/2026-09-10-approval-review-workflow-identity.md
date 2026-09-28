@@ -10,7 +10,7 @@ GitHub can populate a workflow run's `name` with its expanded `run-name`. The ap
 
 ## Decision
 
-The [approval publisher](../../../../.github/review-ownership/check-approval.mjs) identifies the review-event workflow by its exact `workflow_run.path`. It also requires a successful `pull_request_review` run, parses the pull-request number from `display_title`, validates any supplied pull-request association, and compares the current pull-request head with the reviewed head before evaluating approvals.
+The `.github/review-ownership/check-approval.mjs` identifies the review-event workflow by its exact `workflow_run.path`. It also requires a successful `pull_request_review` run, parses the pull-request number from `display_title`, validates any supplied pull-request association, and compares the current pull-request head with the reviewed head before evaluating approvals.
 
 ## Alternatives considered
 
@@ -22,4 +22,4 @@ The [approval publisher](../../../../.github/review-ownership/check-approval.mjs
 
 Run-title expansion does not prevent approval refreshes, while an unexpected workflow file still fails validation. Moving the review-event workflow requires updating the publisher's expected path.
 
-[Approval policy tests](../../../../.github/review-ownership/check-approval.test.mjs) cover a numbered run name, invalid source paths and events, unsuccessful runs, invalid titles, and superseded heads. The [approval outcome policy](2026-09-09-blocked-weighted-approvals-remain-pending.md) continues to own pending and successful status semantics.
+`.github/review-ownership/check-approval.test.mjs` cover a numbered run name, invalid source paths and events, unsuccessful runs, invalid titles, and superseded heads. The [approval outcome policy](2026-09-09-blocked-weighted-approvals-remain-pending.md) continues to own pending and successful status semantics.

@@ -18,6 +18,7 @@ import { TeamId, TeamTaskId } from './types.ts'
 import type {
   Config,
   CreateTeamTaskRequest,
+  SendTeamMessageRemoteRequest,
   SendTeamMessageRequest,
   SendTeamMessageResult,
   SpawnTeammateRequest,
@@ -26,6 +27,7 @@ import type {
   TeamTaskView,
   TeamView,
   TeamWaitResult,
+  UpdateTeamMemberRoleRequest,
   UpdateTeamTaskRequest,
 } from './types.ts'
 
@@ -151,6 +153,38 @@ export class TeamService extends TypertRemoteService {
    */
   async spawnTeammate(caller: Agent, request: SpawnTeammateRequest): Promise<SpawnTeammateResult> {
     return await this.roster.spawn(caller, request)
+  }
+
+  /**
+   * Commit one durable teammate job-role edit requested on behalf of the user.
+   * @param agent - exact live Lead Agent authorizing the edit.
+   * @param request - target teammate name and the replacement job role.
+   * @param signal - cancellation for the edit operation.
+   * @returns the updated roster row.
+   */
+  @Remote('updateMemberRole')
+  async updateMemberRole(
+    agent: Agent,
+    request: UpdateTeamMemberRoleRequest,
+    signal: AbortSignal,
+  ): Promise<TeamMemberView> {
+    return await this.roster.updateRole(agent, request, signal)
+  }
+
+  /**
+   * Queue one durable peer message from a browser client, then attempt immediate delivery.
+   * @param agent - exact live sending Team member.
+   * @param request - target name and serializable content.
+   * @param signal - cancellation for the send operation.
+   * @returns durable message identity and immediate-delivery observation.
+   */
+  @Remote('send')
+  async sendRemote(
+    agent: Agent,
+    request: SendTeamMessageRemoteRequest,
+    signal: AbortSignal,
+  ): Promise<SendTeamMessageResult> {
+    return await this.mailbox.send(agent, { target: request.target, content: request.content, signal })
   }
 
   /**

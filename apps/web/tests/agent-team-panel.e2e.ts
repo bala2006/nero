@@ -80,91 +80,49 @@ describe('web e2e: Agent Teams panel', () => {
     await scaffold?.close()
   })
 
-  it('displays agent-owned tasks through a read-only board', async () => {
+  it('opens the Agent Canvas from one transcript box and reads the roster', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-agent-team-panel'))
-    await page.locator('[data-team-action]').getByRole('button', { name: /Agent Team/iu }).click()
-    const action = page.getByRole('dialog', { name: 'Agent Team', exact: true })
-    await action.getByText('No shared tasks yet').waitFor()
-    await action.getByText('lead').waitFor()
-
-    expect(await action.getByRole('button', { name: 'New task' }).count()).toBe(0)
-
-    const agent = scaffold.ctx.agents.list()[0]!
-    const task = await scaffold.ctx.agentTeams.createTask(agent, {
-      subject: 'Agent task', description: 'Created by the Team Lead', writeScopes: ['src/web'],
-    })
-    await action.getByRole('button', { name: 'Refresh Team' }).click()
-    await action.getByText('Agent task', { exact: true }).waitFor()
-    await action.getByText('Owner: Unowned', { exact: true }).waitFor()
-    await scaffold.ctx.agentTeams.updateTask(agent, {
-      taskId: task.id, expectedRevision: task.revision, action: 'claim',
-    })
-    await action.getByRole('button', { name: 'Refresh Team' }).click()
-    await action.getByText('In progress', { exact: true }).waitFor()
-    await action.getByText('Owner: lead', { exact: true }).waitFor()
-    expect(await action.getByRole('button', { name: /^(New task|Edit|Complete|Reopen|Delete)$/u }).count()).toBe(0)
-    expect(await action.locator('input, select, textarea').count()).toBe(0)
+    const box = page.locator('[data-agent-swarm]').getByRole('button')
+    await box.click()
+    const canvas = page.locator('[data-team-panel]')
+    await canvas.waitFor()
+    await canvas.locator('[data-agent-node="lead"]').waitFor()
+    await canvas.getByRole('button', { name: 'Refresh Team' }).waitFor()
+    expect(await canvas.locator('[data-agent-node]').count()).toBe(1)
 
     const snapshot = await captureStableAria(page, '[data-team-panel]', scaffold.workspaceCwd)
     await compareOrRefreshGolden(PANEL_EXPECTED, snapshot, MODE)
     expect(tripwire.pageErrors).toEqual([])
     expect(tripwire.warnings).toEqual([])
-    await action.getByRole('button', { name: 'Close' }).click()
   }, 60_000)
 
-  it('keeps the panel inside the viewport and closes on outside click or Escape', async () => {
+  it('pans the canvas and opens one node mini chat', async () => {
     onTestFailed(() => saveFailureShot(page, 'web-e2e-agent-team-panel-keyboard'))
-    const panel = page.getByRole('dialog', { name: 'Agent Team', exact: true })
-    const trigger = page.locator('[data-team-action]').getByRole('button', { name: /Agent Team/iu })
-    const viewport = page.viewportSize()!
-    await trigger.click()
-    await panel.getByText('lead', { exact: true }).waitFor()
-    try {
-      for (const size of [{ width: 760, height: 540 }, { width: 600, height: 420 }]) {
-        await page.setViewportSize(size)
-        await expect.poll(() => panel.evaluate((element) => {
-          const rect = element.getBoundingClientRect()
-          return element.parentElement === document.body
-            && rect.left >= 16 && rect.top >= 16
-            && rect.right <= window.innerWidth - 16 && rect.bottom <= window.innerHeight - 16
-            && [[rect.left + 12, rect.top + 12], [rect.right - 12, rect.bottom - 12]]
-              .every(([x, y]) => element.contains(document.elementFromPoint(x!, y!)))
-        })).toBe(true)
-      }
-      await panel.getByText('Shared tasks', { exact: true }).click()
-      expect(await panel.count()).toBe(1)
-      await page.mouse.click(2, 2)
-      await panel.waitFor({ state: 'detached' })
-      await page.setViewportSize(viewport)
-      await trigger.focus()
-      await page.keyboard.press('Enter')
-      await panel.getByRole('heading', { name: 'Shared tasks' }).waitFor()
-      expect(await panel.evaluate(element => element === document.activeElement)).toBe(true)
-      await page.keyboard.press('Tab')
-      expect(await panel.getByRole('button', { name: 'Refresh Team' })
-        .evaluate(element => element === document.activeElement)).toBe(true)
-      await page.keyboard.press('Tab')
-      expect(await panel.getByRole('button', { name: 'Close', exact: true })
-        .evaluate(element => element === document.activeElement)).toBe(true)
-      await page.keyboard.press('Escape')
-      await panel.waitFor({ state: 'detached' })
-      expect(await trigger.evaluate(element => element === document.activeElement)).toBe(true)
-      await page.keyboard.press('Enter')
-      await panel.waitFor()
-      await page.keyboard.press('Tab')
-      await page.keyboard.press('Tab')
-      await page.keyboard.press('Enter')
-      await panel.waitFor({ state: 'detached' })
-      expect(await trigger.evaluate(element => element === document.activeElement)).toBe(true)
-      await page.keyboard.press('Enter')
-      await panel.waitFor()
-      const outside = page.getByRole('button', { name: 'Settings', exact: true })
-      await outside.focus()
-      await panel.waitFor({ state: 'detached' })
-      expect(await outside.evaluate(element => element === document.activeElement)).toBe(true)
-    } finally {
-      await page.setViewportSize(viewport)
-    }
+    const canvas = page.locator('[data-team-panel]')
+    await canvas.locator('[data-agent-node="lead"]').waitFor()
+    const ground = canvas.locator('[data-agent-canvas]')
+    const box = await ground.boundingBox()
+    if (box === null) throw new Error('Agent Canvas has no box')
+    const graph = ground.locator('[class*="graph"]')
+    const before = await graph.evaluate(element => getComputedStyle(element).transform)
+    await page.mouse.move(box.x + 40, box.y + box.height - 20)
+    await page.mouse.down()
+    await page.mouse.move(box.x + 120, box.y + box.height - 60, { steps: 5 })
+    await page.mouse.up()
+    await expect.poll(() => graph.evaluate(element => getComputedStyle(element).transform)).not.toBe(before)
+    await ground.dblclick({ position: { x: 40, y: box.height - 20 } })
+    await expect.poll(() => graph.evaluate(element => getComputedStyle(element).transform)).toBe(before)
+
+    await canvas.locator('[data-agent-node="lead"]').click()
+    const mini = canvas.locator('[data-agent-mini-chat="lead"]')
+    await mini.waitFor()
+    expect(await mini.getByRole('tab').allTextContents()).toEqual(['Edit Agent', 'Chat', 'Trajectory'])
+    await mini.getByLabel('Chat ID').waitFor()
+    await mini.getByRole('tab', { name: 'Chat' }).click()
+    // The mini chat sends through the embedded conversation's own composer.
+    await mini.getByPlaceholder('Message or run a task, / commands, @ files or sessions').waitFor()
+    await mini.getByRole('button', { name: 'Close' }).click()
+    await mini.waitFor({ state: 'detached' })
   })
 
   it.skipIf(MODE === 'record')('keeps the fixture inventory closed', async () => {

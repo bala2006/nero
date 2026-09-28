@@ -24,7 +24,7 @@ Issue 生命周期工作流仅在 `pull_request.opened` 时初始化 `Start Date
 
 ## 验证
 
-[Issue 管理测试](../../../../.github/issue-management/policy.test.mjs)要求 Priority 和 Start Date 使用 Project custom field，证明仓库读取与 Project 读取使用不同凭据，覆盖上海时区日期边界、仅 opened 分派、空值写入、已有值保留和 Project item 缺失，并固定 `updateProjectV2ItemFieldValue`。工作流测试固定 Project token 的只读权限。删除组织字段前必须逐项比较所有旧字段值与 Project 值，包括已归档的 Project item。
+`.github/issue-management/policy.test.mjs`要求 Priority 和 Start Date 使用 Project custom field，证明仓库读取与 Project 读取使用不同凭据，覆盖上海时区日期边界、仅 opened 分派、空值写入、已有值保留和 Project item 缺失，并固定 `updateProjectV2ItemFieldValue`。工作流测试固定 Project token 的只读权限。删除组织字段前必须逐项比较所有旧字段值与 Project 值，包括已归档的 Project item。
 
 ## 考虑过的替代方案
 

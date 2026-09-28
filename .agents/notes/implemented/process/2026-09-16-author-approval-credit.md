@@ -10,7 +10,7 @@ The approval policy needs author experience to contribute enough points for an e
 
 ## Decision
 
-The [approval policy](../../../../.github/review-ownership/README.md) awards 0.011 points per merged PR in this repository, capped at 1.1 points after 100 PRs. History lookup stops at 100 matching PRs. Author credit alone remains insufficient, and blocking reviews still prevent approval.
+The `.github/review-ownership/README.md` awards 0.011 points per merged PR in this repository, capped at 1.1 points after 100 PRs. History lookup stops at 100 matching PRs. Author credit alone remains insufficient, and blocking reviews still prevent approval.
 
 ## Alternatives considered
 

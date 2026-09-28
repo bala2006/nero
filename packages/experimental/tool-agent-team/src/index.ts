@@ -54,6 +54,7 @@ const MEMBER_VIEW_SCHEMA = {
     description: { type: 'string' },
     provider: { type: 'string' },
     context: { type: 'string', enum: ['fresh', 'fork'] },
+    jobRole: { type: 'string' },
     model: { type: 'string' },
     diagnostics: { type: 'array', required: true, items: { type: 'string' } },
   },
@@ -184,6 +185,10 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
           enum: ['fresh', 'fork'],
           description: 'fresh starts without Lead history; fork inherits completed Lead turns. Defaults to fresh.',
         },
+        job_role: {
+          type: 'string',
+          description: 'Human-assigned job role shown in the UI and announced to the teammate, such as software-developer, researcher, or qa-tester. Free text, at most 200 characters.',
+        },
       },
       output: jsonOutput(SPAWN_VALUE_SCHEMA),
       async execute(args, exec) {
@@ -195,7 +200,7 @@ function install(agent: Agent, ctx: Context, config: Required<Config>): () => vo
           prompt: [
             { type: 'text', text: `<system-reminder>
 You are teammate "${args.name.trim()}".
-Your Team Lead is named "lead".
+${args.job_role === undefined ? '' : `Your job role is "${args.job_role.trim()}"; work accordingly and keep the Team Lead informed of progress and risks from that role's perspective.\n`}Your Team Lead is named "lead".
 Use list_agents({}) to find your teammates and their names.
 To message your Team Lead, use send_message({ target: "lead", message: "..." }).
 To message another teammate, use send_message({ target: "<teammate name>", message: "..." }).
@@ -206,6 +211,7 @@ To message another teammate, use send_message({ target: "<teammate name>", messa
           ],
           context,
           provider: context === 'fork' ? config.forkProvider : config.freshProvider,
+          ...args.job_role === undefined ? {} : { jobRole: args.job_role },
           signal: exec.signal,
         })
         return { member: modelMember(result.member) }

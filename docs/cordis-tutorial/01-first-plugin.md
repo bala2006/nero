@@ -91,5 +91,3 @@ Run again: the process dies with your error. A plugin that fails to load is a lo
 One caveat worth knowing early: a config entry whose module cannot be **resolved** — a typo'd path or package name — is reported through the Cordis logger service instead of crashing the process, and at boot that report can be lost before a console exporter is watching. If a freshly added entry seems to do nothing, check the spelling first.
 
 Next: [Lifecycle and effects](02-lifecycle-and-effects.md) — what happens when a plugin unloads.
-
-[![](https://img.shields.io/badge/powered_by-nero-4D6BFE?style=flat-square&logo=nero&logoColor=white)](https://github.com/nero-ai/nero-harness)

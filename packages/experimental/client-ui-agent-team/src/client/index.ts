@@ -5,7 +5,10 @@ import type { Context as ClientContext } from '@nero/cordis'
 import { mountAgentTeamUi } from './mount.ts'
 
 export { inject } from './mount.ts'
-export type { TeamActionInjected, TeamActionProps, TeamActionResult } from './TeamAction.tsx'
+export type { TeamPanelInjected, TeamPanelProps, TeamPanelResult } from './TeamPanel.tsx'
+export type { AgentSwarmCardInjected, AgentSwarmCardProps } from './SwarmCard.tsx'
+export type { AgentSwarmChatData, AgentSwarmMember, AgentSwarmStatus } from './swarm-card.ts'
+export { TEAM_PANEL_ID, TEAM_PANEL_KIND } from './team-panel.ts'
 export type { TeamKey } from './locales.ts'
 
 /** Mount the generated Team Remote contribution and its browser UI. */

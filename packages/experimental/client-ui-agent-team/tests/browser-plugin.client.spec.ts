@@ -7,7 +7,9 @@ import type { TeamMemberView as TeamRosterMember } from '@nero/nero-experimental
 import type {} from '@nero/nero-experimental-agent-team/remote'
 import { RemoteError } from '@nero/nero-client-test-runtime'
 import type { TypertRemoteContribution } from '@nero/nero-typert-protocol'
-import { TeamAction, type TeamActionInjected } from '../src/client/TeamAction.tsx'
+import { TeamPanel, type TeamPanelInjected } from '../src/client/TeamPanel.tsx'
+import { TEAM_PANEL_ID } from '../src/client/team-panel.ts'
+import { agentChatAddress } from '../src/client/agent-chat.tsx'
 import { inject, mountAgentTeamUi } from '../src/client/mount.ts'
 import { apply as nodeApply } from '../src/index.ts'
 
@@ -88,6 +90,7 @@ async function bench(options: {
       navigation.push(['refresh', id])
       return Promise.resolve()
     },
+    retain: () => ({ release: () => {} }),
     retainInfo: (id: SessionId) => ({
       getSnapshot: () => ({
         referenceCount: id === mainSessionId ? 1 : 0,
@@ -99,12 +102,27 @@ async function bench(options: {
   ctx.provide('uiWorkspace', {
     openSession: (target: unknown) => { navigation.push(['open', target]) },
   } as never)
-  ctx.provide('conversation', {})
+  ctx.provide('uiConversation', { events: { register: vi.fn(() => () => {}) } } as never)
+  ctx.provide('resources', { register: vi.fn(() => () => {}), pin: vi.fn(() => () => {}) } as never)
+  const registered: unknown[] = []
+  ctx.provide('sidebarRightTabs', {
+    register: (definition: unknown) => {
+      registered.push(definition)
+      return () => { registered.splice(registered.indexOf(definition), 1) }
+    },
+  } as never)
+  ctx.provide('sidebarRight', {
+    openResource: (address: string, options: unknown) => { navigation.push(['aside', address, options]) },
+  } as never)
   ctx.provide('locale', new LocaleRuntime(ctx))
   await ctx.plugin(SlotRegistry).await()
   const collapseHeader = ctx.slots.register({
     name: 'root',
-    children: { 'conversation.session.header.actions': { kind: 'list', scope: 'session' } },
+    children: {
+      'conversation.session.header.actions': { kind: 'list', scope: 'session' },
+      'conversation.chat.node': { kind: 'keyed', scope: 'session' },
+      'sidebar.right.pane.tab': { kind: 'keyed', scope: 'session' },
+    },
   } as never, () => null)
   if (options.registrationFailure === true) {
     vi.spyOn(ctx.slots, 'inject').mockImplementationOnce(() => { throw new Error('slot registration failed') })
@@ -120,8 +138,8 @@ async function bench(options: {
   } else {
     await fiber.await()
   }
-  const entry = () => ctx.slots.entries('conversation.session.header.actions')
-    .find(candidate => candidate.component === TeamAction)
+  const entry = () => ctx.slots.entries('sidebar.right.pane.tab')
+    .find(candidate => candidate.component === TeamPanel)
   return {
     ctx,
     fiber,
@@ -129,23 +147,32 @@ async function bench(options: {
     calls,
     navigation,
     remote,
+    registered,
     entry,
+    headerEntries: () => ctx.slots.entries('conversation.session.header.actions'),
     collapseHeader,
     select: (sessionId: SessionId) => { mainSessionId = sessionId },
   }
 }
 
 describe('ui-team browser plugin', () => {
-  it('registers one disposable header action with a read-only RPC-backed task board', async () => {
+  it('registers one disposable Sidebar tab type and body with a read-only RPC-backed task board', async () => {
     const b = await bench()
-    expect(inject).toEqual(['sessions', 'uiWorkspace', 'remote', 'slots', 'locale'])
-    expect(b.entry()).toMatchObject({
-      options: { id: 'agent-team', order: 20 },
-      locale: 'agent-team',
-    })
+    expect(inject).toEqual([
+      'sessions', 'uiWorkspace', 'uiConversation', 'remote', 'slots', 'locale',
+      'resources', 'sidebarRight', 'sidebarRightTabs',
+    ])
+    expect(b.registered[0]).toMatchObject({ id: TEAM_PANEL_ID, kind: 'agent-team', priority: 'builtin' })
+    const definition = b.registered[0] as {
+      readonly guide: readonly { readonly id: string; readonly order: number }[]
+    }
+    expect(definition.guide.map(entry => [entry.id, entry.order])).toEqual([['roster', 20]])
+    expect(b.entry()).toMatchObject({ options: { key: TEAM_PANEL_ID }, locale: 'agent-team' })
+    // The roster no longer lives in the conversation header.
+    expect(b.headerEntries()).toEqual([])
     expect(b.remote.mount).toHaveBeenCalledOnce()
     expect(b.remote.mount).toHaveBeenCalledWith(REMOTE)
-    const actions = (b.entry()!.inject as unknown as () => TeamActionInjected)()
+    const actions = (b.entry()!.inject as unknown as () => TeamPanelInjected)()
     expect((await actions.load(SESSION)).ok).toBe(true)
     expect(b.calls).toEqual([{ method: 'agentTeams/view', args: [SESSION] }])
 
@@ -160,6 +187,7 @@ describe('ui-team browser plugin', () => {
 
     await b.fiber.dispose()
     expect(b.entry()).toBeUndefined()
+    expect(b.registered).toEqual([])
     expect(b.remote.disposeMount).toHaveBeenCalledOnce()
   })
 
@@ -172,7 +200,7 @@ describe('ui-team browser plugin', () => {
 
   it('returns Remote carrier failures unchanged', async () => {
     const view = await bench({ remoteFailure: true })
-    const viewActions = (view.entry()!.inject as unknown as () => TeamActionInjected)()
+    const viewActions = (view.entry()!.inject as unknown as () => TeamPanelInjected)()
     await expect(viewActions.load(SESSION)).resolves.toMatchObject({
       ok: false,
       error: { code: 'gateway/internal', message: 'offline' },
@@ -182,7 +210,7 @@ describe('ui-team browser plugin', () => {
 
   it('opens a continuable teammate address without refreshing the parent catalog', async () => {
     const b = await bench()
-    const actions = (b.entry()!.inject as unknown as () => TeamActionInjected)()
+    const actions = (b.entry()!.inject as unknown as () => TeamPanelInjected)()
     const member: TeamRosterMember = {
       id: CHILD,
       name: 'worker',
@@ -192,17 +220,18 @@ describe('ui-team browser plugin', () => {
     }
     actions.openTeammate(SESSION, member)
     expect(b.navigation).toEqual([
-      ['open', {
+      ['aside', agentChatAddress({
         parentSessionId: SESSION,
         childSessionId: CHILD,
         mode: 'continuable',
-      }],
+        member: 'worker',
+      }), { kind: 'agentchat', preferNewPane: true }],
     ])
   })
 
   it('routes Team actions from an addressed teammate conversation back through its Lead', async () => {
     const b = await bench({ addressed: true })
-    const actions = (b.entry()!.inject as unknown as () => TeamActionInjected)()
+    const actions = (b.entry()!.inject as unknown as () => TeamPanelInjected)()
     await actions.load(CHILD)
     actions.openTeammate(CHILD, {
       id: CHILD,
@@ -213,17 +242,18 @@ describe('ui-team browser plugin', () => {
     })
     expect(b.calls[0]).toEqual({ method: 'agentTeams/view', args: [SESSION] })
     expect(b.navigation).toEqual([
-      ['open', {
+      ['aside', agentChatAddress({
         parentSessionId: SESSION,
         childSessionId: CHILD,
         mode: 'continuable',
-      }],
+        member: 'worker',
+      }), { kind: 'agentchat', preferNewPane: true }],
     ])
   })
 
   it('does not open a teammate from a conversation outside the main view', async () => {
     const b = await bench()
-    const actions = (b.entry()!.inject as unknown as () => TeamActionInjected)()
+    const actions = (b.entry()!.inject as unknown as () => TeamPanelInjected)()
     b.select('other-session' as SessionId)
     actions.openTeammate(SESSION, {
       id: CHILD,
@@ -238,7 +268,7 @@ describe('ui-team browser plugin', () => {
   it('opens a teammate when the parent catalog is missing or empty', async () => {
     for (const catalog of ['missing', 'empty'] as const) {
       const b = await bench({ catalog })
-      const actions = (b.entry()!.inject as unknown as () => TeamActionInjected)()
+      const actions = (b.entry()!.inject as unknown as () => TeamPanelInjected)()
       actions.openTeammate(SESSION, {
         id: CHILD,
         name: 'worker',
@@ -247,20 +277,25 @@ describe('ui-team browser plugin', () => {
         diagnostics: [],
       })
       expect(b.navigation).toEqual([
-        ['open', { parentSessionId: SESSION, childSessionId: CHILD, mode: 'continuable' }],
+        ['aside', agentChatAddress({
+          parentSessionId: SESSION,
+          childSessionId: CHILD,
+          mode: 'continuable',
+          member: 'worker',
+        }), { kind: 'agentchat', preferNewPane: true }],
       ])
       await b.fiber.dispose()
     }
   })
 
-  it('re-registers after the conversation header slot is collapsed and declared again', async () => {
+  it('re-registers after the Sidebar tab seat is collapsed and declared again', async () => {
     const b = await bench()
     expect(b.entry()).toBeDefined()
     b.collapseHeader()
     expect(b.entry()).toBeUndefined()
     b.ctx.slots.register({
       name: 'root',
-      children: { 'conversation.session.header.actions': { kind: 'list', scope: 'session' } },
+      children: { 'sidebar.right.pane.tab': { kind: 'keyed', scope: 'session' } },
     } as never, () => null)
     await Promise.resolve()
     expect(b.entry()).toBeDefined()

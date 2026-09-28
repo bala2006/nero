@@ -7269,9 +7269,15 @@ importers:
       '@nero/nero-client-locale':
         specifier: workspace:*
         version: link:../../client/locale
+      '@nero/nero-client-resources':
+        specifier: workspace:*
+        version: link:../../client/resources
       '@nero/nero-client-test-runtime':
         specifier: workspace:*
         version: link:../../test-support/client-runtime
+      '@nero/nero-client-ui-chat':
+        specifier: workspace:*
+        version: link:../../client/ui-chat
       '@nero/nero-client-ui-conversation':
         specifier: workspace:*
         version: link:../../client/ui-conversation
@@ -7284,6 +7290,9 @@ importers:
       '@nero/nero-client-ui-session':
         specifier: workspace:*
         version: link:../../client/ui-session
+      '@nero/nero-client-ui-sidebar-right':
+        specifier: workspace:*
+        version: link:../../client/ui-sidebar-right
       '@nero/nero-client-ui-slots':
         specifier: workspace:*
         version: link:../../client/ui-slots
@@ -7296,6 +7305,9 @@ importers:
       '@nero/nero-session':
         specifier: workspace:*
         version: link:../../core/session
+      '@nero/nero-subagent':
+        specifier: workspace:*
+        version: link:../../subagent/subagent
       '@nero/nero-typert-protocol':
         specifier: workspace:*
         version: link:../../typert/protocol

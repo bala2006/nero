@@ -2,17 +2,13 @@
 
 English | [中文](README.zh.md)
 
-Nero Harness (`nero`) is an open-source agent harness developed by [Nero AI](https://nero.com).
+Nero Harness (`nero`) is an agent harness developed by [Nero AI](https://nero.com).
 
 It is built on an **everything-is-a-plugin** architecture and powered by [Cordis](https://github.com/cordiverse/cordis), whose design is described in [_A Programming Paradigm for Spatiotemporal Composability_](https://arxiv.org/abs/2608.25512).
-
-Documentation: [https://nero-harness.github.io/nero-harness/](https://nero-harness.github.io/nero-harness/)
 
 ## Developer preview
 
 Nero Harness is in _developer preview_ and iterating rapidly. **THERE WILL BE COMPATIBILITY-BREAKING CHANGES.**
-
-Review the [safety notice](SAFETY.md) before running the project.
 
 ## Run
 
@@ -40,16 +36,6 @@ pnpm nero web
 
 `pnpm run build` prepares the repository artifacts. `pnpm nero web` uses those built artifacts without rebuilding.
 
-## Community and support
-
-- Submit feedback or bug reports through [GitHub Discussions](https://github.com/nero-ai/nero-harness/discussions).
-- Add the [`nero-plugin`](https://github.com/topics/nero-plugin) topic to your plugin repository for discoverability.
-- Join <a href="https://discord.gg/Ycq5dCaS4">Nero Harness Discord community</a>.
-
-## Contributing
-
-See [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ## Development
 
 Start with the [development guide](docs/development.md) and [architecture documentation](docs/architecture.md).
@@ -57,18 +43,6 @@ Start with the [development guide](docs/development.md) and [architecture docume
 `pnpm run dev:web` builds, serves, and rebuilds client bundles on source edits in one terminal, and `make help` lists the matching Make targets for Web and Desktop; the guide's application commands section owns the full table.
 
 For agents, follow [AGENTS.md](AGENTS.md).
-
-## Citation
-
-```bibtex
-@misc{nero-harness2026,
-  title={Nero Harness: Everything is a Plugin},
-  author={Nero-AI},
-  year={2026},
-  publisher={GitHub},
-  howpublished={\url{https://github.com/nero-ai/nero-harness}},
-}
-```
 
 ## License
 

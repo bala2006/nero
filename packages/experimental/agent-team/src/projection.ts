@@ -67,6 +67,7 @@ const teamMemberSnapshotSchema = z.object({
   provider: z.string(),
   context: z.enum(['fresh', 'fork']),
   phase: z.enum(['provisioning', 'active', 'failed']),
+  jobRole: z.string().optional(),
   error: z.string().optional(),
 }).strict() as z.ZodType<TeamMemberSnapshot>
 
@@ -246,7 +247,13 @@ function applyCurrentTeamEvent(state: TeamState, event: TeamSessionEvent): void 
         if (prior.name !== member.name || prior.provider !== member.provider || prior.context !== member.context) {
           throw new Error(`teammate "${member.id}" changed immutable identity fields`)
         }
-        if (prior.phase !== 'provisioning' || member.phase === 'provisioning') {
+        // Provisioning settles once to a terminal phase; an active snapshot may
+        // be re-emitted only for a durable mutable-field edit such as a job role.
+        if (prior.phase === 'provisioning') {
+          if (member.phase === 'provisioning') {
+            throw new Error(`teammate "${member.name}" has an invalid provisioning -> provisioning transition`)
+          }
+        } else if (member.phase !== 'active' || prior.phase !== 'active') {
           throw new Error(`teammate "${member.name}" has an invalid ${prior.phase} -> ${member.phase} transition`)
         }
       }

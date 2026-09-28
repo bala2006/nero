@@ -10,7 +10,7 @@ Status: implemented
 
 ## Decision
 
-[审批策略](../../../../.github/review-ownership/README.md) 按变更旧生产代码行的归属比例，以 `min(2, 1 + 4 × ownedLines / totalLines)` 调整一分批准的权重。归属比例为 0% 时计一分，12.5% 时计 1.5 分，25% 及以上时计两分。分数在与两分通过线比较前不做舍入。合并基点同时提供代码分类和 blame 依据，GitHub 将归属提交关联到评审者账号。无法关联账号的作者仍计入分母。新增行没有原作者，不计入行数；分母为空时不提升权重。
+`.github/review-ownership/README.md` 按变更旧生产代码行的归属比例，以 `min(2, 1 + 4 × ownedLines / totalLines)` 调整一分批准的权重。归属比例为 0% 时计一分，12.5% 时计 1.5 分，25% 及以上时计两分。分数在与两分通过线比较前不做舍入。合并基点同时提供代码分类和 blame 依据，GitHub 将归属提交关联到评审者账号。无法关联账号的作者仍计入分母。新增行没有原作者，不计入行数；分母为空时不提升权重。
 
 发布器在依赖安装和评估前将头提交标记为待定，避免历史拉取中断后保留此前的成功状态。它使用实时 base 分支和被评审的精确 head，读取完整 Git 历史，不检出 PR 代码；基础分数或阻塞评审已决定结果时跳过归属计算。维护中的词法分析器区分仓库各源码语言中的注释与代码。作者查询按提交批量执行，所有评审者共用一次统计。现有的[待定状态语义](2026-09-09-blocked-weighted-approvals-remain-pending.zh.md)和[评审事件验证](2026-09-10-approval-review-workflow-identity.zh.md)仍是独立要求。
 
@@ -32,4 +32,4 @@ Blame 衡量最后修改者归属，不代表评审质量或语义上的专业�
 
 ## Verification
 
-[策略测试](../../../../.github/review-ownership/check-approval.test.mjs)覆盖阈值、零分母、阻塞评审、共享统计和归属计算失败。[作者测试](../../../../.github/review-ownership/blame-ownership.test.mjs)覆盖批量查询、账号聚合和不完整响应。[Git 集成测试](../../../../.github/review-ownership/test_blame_production.py)验证合并基点、重命名、删除、混合注释行、排除规则、浅历史，以及不检出 PR 代码的拉取过程。
+`.github/review-ownership/check-approval.test.mjs`覆盖阈值、零分母、阻塞评审、共享统计和归属计算失败。`.github/review-ownership/blame-ownership.test.mjs`覆盖批量查询、账号聚合和不完整响应。`.github/review-ownership/test_blame_production.py`验证合并基点、重命名、删除、混合注释行、排除规则、浅历史，以及不检出 PR 代码的拉取过程。

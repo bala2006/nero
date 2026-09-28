@@ -109,5 +109,3 @@ needs-timer is PENDING — a required service is missing
 `inject: ['timer']` has no provider. Add `- name: '@nero/cordis-plugin-timer'` to the list and the plugin loads. When a plugin does nothing and reports nothing, inspect its fiber state. Iterating without the PENDING filter also shows the loader's own plugins (Loader, Include) as ACTIVE fibers because plugins mount the config file itself.
 
 Next: [Into the harness](07-into-the-harness.md) — the same patterns against real harness services.
-
-[![](https://img.shields.io/badge/powered_by-nero-4D6BFE?style=flat-square&logo=nero&logoColor=white)](https://github.com/nero-ai/nero-harness)

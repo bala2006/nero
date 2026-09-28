@@ -2105,6 +2105,10 @@ lsp 工具将提供方选择和语言服务器子进程置于 ctx.lsp 之后，�
         "fresh",
         "fork"
       ]
+    },
+    "job_role": {
+      "type": "string",
+      "description": "Human-assigned job role shown in the UI and announced to the teammate, such as software-developer, researcher, or qa-tester. Free text, at most 200 characters."
     }
   },
   "required": [

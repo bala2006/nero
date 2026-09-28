@@ -1,0 +1,83 @@
+/* Read-only stand-in for the composer's model seat on teammate Sessions: the
+   same 28px chip geometry and 13/20 medium label as the real trigger, without
+   its hover or menu affordances. */
+.modelChip {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 220px;
+  height: 28px;
+  padding: 0 8px;
+  overflow: hidden;
+  border-radius: 24px;
+  color: var(--dsw-alias-label-secondary);
+  font-size: 13px;
+  line-height: 20px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.root {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border-bottom: 0.5px solid var(--dsw-alias-border-l1);
+}
+
+.panel {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.label {
+  width: 100%;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+}
+
+.input,
+.textarea {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 0.5px solid var(--dsw-alias-border-l1);
+  border-radius: 7px;
+  background: var(--dsw-alias-bg-base);
+  color: var(--dsw-alias-label-primary);
+  font: inherit;
+  font-size: 12px;
+  resize: none;
+}
+
+.button {
+  flex: none;
+  padding: 5px 10px;
+  border: 0;
+  border-radius: 7px;
+  background: var(--dsw-alias-fill-l2);
+  color: var(--dsw-alias-label-primary);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.button:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.notice {
+  width: 100%;
+  color: var(--dsw-alias-label-tertiary);
+  font-size: 11px;
+}
